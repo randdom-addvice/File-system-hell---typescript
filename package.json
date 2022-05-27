@@ -12,6 +12,7 @@
   "devDependencies": {
     "@babel/core": "^7.18.2",
     "@babel/preset-env": "^7.18.2",
+    "@types/shortid": "0.0.29",
     "babel-loader": "^8.2.5",
     "css-loader": "^6.7.1",
     "html-loader": "^3.1.0",
@@ -27,6 +28,7 @@
     "webpack-dev-server": "^4.9.0"
   },
   "dependencies": {
+    "axios": "^0.27.2",
     "shortid": "^2.2.16"
   }
 }
