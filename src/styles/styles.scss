@@ -1,0 +1,265 @@
+@import "./partials/_variables.scss";
+@import "./partials/mixins.scss";
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+body {
+  font-family: $font-Roboto;
+}
+.header {
+  height: 8vh;
+  width: 100%;
+  border-bottom: 1px solid $grey;
+  display: flex;
+  align-items: center;
+
+  &__container {
+    width: 90%;
+    margin: auto;
+  }
+  &__nav {
+    &-brand div {
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+  }
+}
+.explorer {
+  min-height: 92vh;
+  width: 100%;
+  &__container {
+    background-color: $primary-slate-light;
+    display: grid;
+    grid-template-columns: 1fr 2fr 10fr;
+    height: auto;
+    @include laptopBreakpoint() {
+      grid-template-columns: 1fr 3fr 8fr;
+    }
+    @include tabletBreakpoint() {
+      grid-template-columns: 1fr 4fr 8fr;
+    }
+    @include mobileBreakpoint() {
+      grid-template-columns: 1fr 4fr 8fr;
+    }
+  }
+  &__icon {
+    min-height: 92vh;
+    padding-top: 1rem;
+    border-right: 1px solid $grey;
+    &-wrapper {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+
+      & > div {
+        width: 50%;
+        margin-bottom: 2rem;
+        cursor: pointer;
+
+        i {
+          font-size: 2rem;
+        }
+      }
+    }
+  }
+  &__content {
+    border-right: 1px solid $grey;
+    padding-top: 1rem;
+
+    &-input {
+      width: 100%;
+      margin-left: 0.5rem;
+
+      &-group {
+        display: flex;
+        justify-content: space-between;
+      }
+      &-icon {
+        margin-right: 0.5rem;
+        object,
+        img {
+          width: 16px;
+          height: 16px;
+        }
+      }
+      &-textField {
+        width: 100%;
+        input {
+          width: 100%;
+        }
+      }
+    }
+    &-textField-error {
+      padding: 0.5rem;
+      background: $violet;
+      margin-top: 0.4rem;
+      span {
+        color: #fff;
+        font-size: 0.8rem;
+        font-weight: 100;
+      }
+    }
+
+    &-headerNav nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid;
+      padding: 0.13rem 0;
+      ul {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        list-style: none;
+
+        li {
+          margin-right: 0.2rem;
+          cursor: pointer;
+        }
+      }
+    }
+
+    &-wrapper {
+      width: 85%;
+      margin: auto;
+    }
+
+    &-folder,
+    &-file {
+      // border-bottom: 1px solid $dark-grey;
+      &--over {
+        background-color: $dark-grey;
+      }
+      position: relative;
+      user-select: none;
+      &-group {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        padding: 0.3rem;
+        cursor: pointer;
+      }
+      &-arrow {
+        margin-right: 0.5rem;
+      }
+      // 22603624898
+      &-icon {
+        margin-right: 1rem;
+        object,
+        img {
+          width: 16px;
+          height: 16px;
+        }
+      }
+      &--collapsed {
+        background-color: $secondary-white;
+        // & > .explorer__content-file.nested.d-none,
+        // .explorer__content-folder.nested.d-none {
+        //   display: block;
+        // }
+      }
+    }
+  }
+  .context {
+    position: absolute;
+    top: 0;
+    right: -80%;
+    z-index: 10;
+    background: $dark-grey;
+    min-width: 10rem;
+
+    &__container {
+      // width: 90%;
+      margin: auto;
+
+      ul {
+        list-style: none;
+        // padding: 1rem;
+        padding-bottom: 0;
+        padding-top: 1rem;
+
+        li {
+          color: #fff;
+          padding-bottom: 0.5rem;
+          margin-bottom: 0.8rem;
+          // margin-top: 0.8rem;
+          font-size: 0.8rem;
+          padding-left: 1rem;
+          // padding-top: 0.2rem;
+          cursor: pointer;
+          // background-color: $info;
+
+          &:hover {
+            background-color: $info;
+          }
+        }
+      }
+    }
+  }
+  .delete__zone {
+    position: fixed;
+    top: 0;
+    height: 8vh;
+    background: #fff;
+    width: 100vw;
+    visibility: hidden;
+
+    &--over {
+      visibility: visible;
+
+      &--dashed {
+        border: 3px dashed $grey;
+      }
+    }
+
+    &-container {
+      width: 50%;
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+
+      span {
+        font-size: 3em;
+        color: $danger;
+      }
+    }
+  }
+
+  &__view {
+    &-container {
+      display: flex;
+      height: 20vh;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+
+      h4 {
+        font-size: 2rem;
+        font-weight: 400;
+        color: $primary-slate;
+        font-family: $font-Open-Sans;
+      }
+    }
+  }
+}
+
+// Levels
+.nested {
+  margin-left: 0.5rem;
+}
+.d-none {
+  display: none !important;
+}
+.d-block {
+  display: block !important;
+}
+.v-hidden {
+  visibility: hidden !important;
+}
+//call this 012787000.

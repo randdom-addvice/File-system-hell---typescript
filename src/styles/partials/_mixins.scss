@@ -1,0 +1,34 @@
+@import "./variables";
+
+//desktop
+@mixin desktopBreakpoint {
+  @media only screen and (max-width: 1800px) {
+    @content;
+  }
+}
+@mixin laptopBreakpoint {
+  @media only screen and (max-width: 1200px) {
+    @content;
+  }
+}
+@mixin tabletBreakpoint {
+  @media only screen and (max-width: 900px) {
+    @content;
+  }
+}
+@mixin mobileBreakpoint {
+  @media only screen and (max-width: 600px) {
+    @content;
+  }
+}
+@mixin mobileBreakpointXs {
+  @media only screen and (max-width: 599px) {
+    @content;
+  }
+}
+// Large DESKTOP
+@mixin desktopBreakpoint-up-sm {
+  @media (min-width: 500px) and (orientation: portrait) {
+    @content;
+  }
+}
