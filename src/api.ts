@@ -19,20 +19,20 @@ type GetFileInDirectoryResponse = AxiosResponse<{
 }>;
 
 class API {
-  async getDirectories() {
-    const res: GetDirectoriesResponse = await req.get(`/directories`);
+  async getDirectories(): Promise<GetDirectoriesResponse> {
+    const res = await req.get(`/directories`);
     return res;
   }
 
-  async getFileInDirectory(directory: string) {
-    const res: GetFileInDirectoryResponse = await req.get(
-      `/files/?directory=${directory}`
-    );
+  async getFileInDirectory(
+    directory: string
+  ): Promise<GetFileInDirectoryResponse> {
+    const res = await req.get(`/files/?directory=${directory}`);
     return res;
   }
 
-  async getFile(directory: string) {
-    const res: AxiosResponse<IFile> = await req.get("/files/get-file", {
+  async getFile(directory: string): Promise<AxiosResponse<IFile>> {
+    const res = await req.get("/files/get-file", {
       params: { directory },
     });
     return res;

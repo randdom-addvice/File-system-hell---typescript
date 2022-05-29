@@ -1,10 +1,17 @@
 import { AxiosResponse } from "axios";
 
 interface IObjectKeys {
-  [key: string]: string | number | [IFile] | [IFolder] | undefined;
+  [key: string]: string | number | undefined;
 }
 
-export interface IFolder extends IObjectKeys {
+export interface FolderState {
+  [key: string]: IFolder;
+}
+export interface FileState {
+  [key: string]: IFile;
+}
+
+export interface IFolder {
   id: string;
   path: string;
   name: string;
@@ -13,8 +20,9 @@ export interface IFolder extends IObjectKeys {
 }
 
 export interface IFile {
+  file_id: string;
   file_dir: string;
-  file_ext: string;
+  file_type: string;
   file_name: string;
   file_content: any;
 }

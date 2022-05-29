@@ -132,7 +132,7 @@ export const FolderBlock = (props: {
     ? `'explorer__content-folder ${props.nested}'`
     : `explorer__content-folder`;
 
-  return `<div draggable="true" class=${className} id=${props.id} data-type="folder" data-folder_id=${props.id}>
+  return `<div draggable="true" title=${props.folder_name} class=${className} id=${props.id} data-type="folder" data-folder_id=${props.id}>
       <div class="explorer__content-folder-group">
         <div class="explorer__content-folder-arrow">
             <span>
@@ -158,7 +158,9 @@ export const FileBlock = (props: {
 }) => {
   const { name, id, file_id, ext } = props;
   return `
-    <div draggable="true" class="explorer__content-file nested" data-type="file" id=${id} data-file_id=${file_id}>
+    <div draggable="true" title=${
+      props.name
+    } class="explorer__content-file nested" data-type="file" id=${id} data-file_id=${file_id}>
       <div class="explorer__content-file-group">
         <div class="explorer__content-folder-arrow"></div>
         <div class="explorer__content-folder-icon">
