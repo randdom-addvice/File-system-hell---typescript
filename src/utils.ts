@@ -3,5 +3,6 @@ export const deleteDomElement = (element: string) => {
   el?.remove();
 };
 
-export const selectDomElement = (element: string) =>
-  document.querySelector(element);
+export const selectDomElement = (element: string): HTMLElement | null => {
+  return document.querySelector(element);
+};

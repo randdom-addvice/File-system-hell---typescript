@@ -18,7 +18,15 @@ type GetFileInDirectoryResponse = AxiosResponse<{
   file_dir?: string;
 }>;
 
-class API {
+interface IApi {
+  getDirectories(): Promise<GetDirectoriesResponse>;
+  getFileInDirectory(dir: string): Promise<GetFileInDirectoryResponse>;
+  getFile(dir: string): Promise<AxiosResponse<IFile>>;
+  deleteDirectory(path: string): Promise<AxiosResponse<string>>;
+  deleteFile(path: string): Promise<AxiosResponse<string>>;
+}
+
+class API implements IApi {
   async getDirectories(): Promise<GetDirectoriesResponse> {
     const res = await req.get(`/directories`);
     return res;
@@ -36,6 +44,17 @@ class API {
       params: { directory },
     });
     return res;
+  }
+
+  async deleteDirectory(path: string): Promise<AxiosResponse<string>> {
+    return await req.delete("/directories/delete", {
+      data: { directory: path },
+    });
+  }
+  async deleteFile(path: string): Promise<AxiosResponse<string>> {
+    return await req.delete("/files/delete", {
+      data: { file_dir: path },
+    });
   }
 }
 
