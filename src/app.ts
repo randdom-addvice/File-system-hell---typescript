@@ -19,7 +19,7 @@ import {
   unmountComponent,
 } from "./components";
 import { selectDomElement } from "./utils";
-let req = new API();
+const req = new API();
 
 // let DND = new DragNDrop();
 
@@ -210,6 +210,7 @@ class Folder {
           FolderBlock({ folder_name: i.name, id: i.id, nested: "nested" }),
           `${dir.id}`
         ); //add a nested folder inside of the parent
+        this.folders[i.id] = i;
         this.addFileToDirectory(i);
         if (i.child && i.child.length) this.checkForSubFolders(i); //check if subfolder also has a child the re-run function
       });

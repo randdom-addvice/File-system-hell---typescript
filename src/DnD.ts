@@ -1,4 +1,5 @@
 import { API } from "./api";
+import { unmountComponent } from "./components";
 import { FileState, FolderState } from "./interfaces/interface";
 
 interface DnDClass {
@@ -9,7 +10,7 @@ interface DnDClass {
   dropZoneId: string | null;
   type: string;
 }
-
+const req = new API();
 class DnD {
   private files: FileState;
   private folders: FolderState;
@@ -45,7 +46,7 @@ class DnD {
     this.trashZone.classList.add("delete__zone--over");
     this.selectedId =
       currentTarget.dataset.folder_id ||
-      (currentTarget.dataset.file_id as string | null);
+      (currentTarget.dataset.file_id as string | null); //set the id of the selected folder or file to be used for further operation
   }
 
   dragLeave(e: any) {
@@ -73,11 +74,21 @@ class DnD {
     this.trashZone?.classList.add("delete__zone--over--dashed");
   }
 
-  dropInTrash(e: DragEvent) {
+  async dropInTrash(e: DragEvent) {
     e.stopPropagation();
-    this.trashZone?.classList.remove("delete__zone--over--dashed");
-    console.log(this.files);
-    // console.log(this.folders);
+    try {
+      this.trashZone?.classList.remove("delete__zone--over--dashed");
+      if (this.type === "folder") {
+        await req.deleteDirectory(this.folders[this.selectedId!].path);
+      } else {
+        await req.deleteFile(this.files[this.selectedId!].file_dir);
+      }
+      unmountComponent(this.selectedId!);
+      this.trashZone?.classList.remove("delete__zone--over");
+    } catch (error) {
+      alert("OOPS! an error occurred");
+    }
+    e.preventDefault();
   }
 }
 
