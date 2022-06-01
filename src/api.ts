@@ -18,43 +18,89 @@ type GetFileInDirectoryResponse = AxiosResponse<{
   file_dir?: string;
 }>;
 
+interface CreateFile {
+  output_dir: string;
+  file_name: string;
+  file_ext: string;
+  content?: string;
+}
+
 interface IApi {
   getDirectories(): Promise<GetDirectoriesResponse>;
   getFileInDirectory(dir: string): Promise<GetFileInDirectoryResponse>;
   getFile(dir: string): Promise<AxiosResponse<IFile>>;
   deleteDirectory(path: string): Promise<AxiosResponse<string>>;
   deleteFile(path: string): Promise<AxiosResponse<string>>;
+  moveDirectory(oldDir: string, newDir: string): Promise<AxiosResponse<string>>;
+  moveFile(oldDir: string, newDir: string): Promise<AxiosResponse<string>>;
+  createDirectory(
+    newDir: string
+  ): Promise<AxiosResponse<{ success: boolean; message: string }>>;
+  createFile(newFile: CreateFile): Promise<AxiosResponse<string>>;
 }
 
 class API implements IApi {
-  async getDirectories(): Promise<GetDirectoriesResponse> {
+  public async getDirectories(): Promise<GetDirectoriesResponse> {
     const res = await req.get(`/directories`);
     return res;
   }
 
-  async getFileInDirectory(
+  public async getFileInDirectory(
     directory: string
   ): Promise<GetFileInDirectoryResponse> {
     const res = await req.get(`/files/?directory=${directory}`);
     return res;
   }
 
-  async getFile(directory: string): Promise<AxiosResponse<IFile>> {
+  public async getFile(directory: string): Promise<AxiosResponse<IFile>> {
     const res = await req.get("/files/get-file", {
       params: { directory },
     });
     return res;
   }
 
-  async deleteDirectory(path: string): Promise<AxiosResponse<string>> {
+  public async deleteDirectory(path: string): Promise<AxiosResponse<string>> {
     return await req.delete("/directories/delete", {
       data: { directory: path },
     });
   }
-  async deleteFile(path: string): Promise<AxiosResponse<string>> {
+
+  public async deleteFile(path: string): Promise<AxiosResponse<string>> {
     return await req.delete("/files/delete", {
       data: { file_dir: path },
     });
+  }
+
+  public async moveDirectory(
+    oldDir: string,
+    newDir: string
+  ): Promise<AxiosResponse<string>> {
+    return await req.post("/directories/move", {
+      old_dir: oldDir,
+      new_dir: newDir,
+    });
+  }
+
+  public async moveFile(
+    oldDir: string,
+    newDir: string
+  ): Promise<AxiosResponse<string>> {
+    return await req.post("/files/move", {
+      old_dir: oldDir,
+      new_dir: newDir,
+    });
+  }
+
+  public async createDirectory(
+    newDir: string
+  ): Promise<AxiosResponse<{ success: boolean; message: string }>> {
+    return req.post("/directories/create", {
+      new_directory: newDir,
+    });
+  }
+
+  public async createFile(newFile: CreateFile): Promise<AxiosResponse<string>> {
+    return req.post("/files/create", { ...newFile });
   }
 }
 

@@ -130,9 +130,7 @@ body {
     &-folder,
     &-file {
       // border-bottom: 1px solid $dark-grey;
-      &--over {
-        background-color: $dark-grey;
-      }
+
       position: relative;
       user-select: none;
       &-group {
@@ -160,6 +158,13 @@ body {
         // .explorer__content-folder.nested.d-none {
         //   display: block;
         // }
+      }
+      &--over {
+        background-color: $dark-grey;
+
+        & > {
+          background-color: $dark-grey;
+        }
       }
     }
   }

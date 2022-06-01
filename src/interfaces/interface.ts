@@ -15,8 +15,8 @@ export interface IFolder {
   id: string;
   path: string;
   name: string;
-  files: [IFile];
-  child?: [IFolder];
+  files?: [IFile];
+  child?: [IFolder] | [];
 }
 
 export interface IFile {
