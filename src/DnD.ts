@@ -19,17 +19,17 @@ class DnD {
   private selectedId: string | null;
   private dropZoneId: string | null;
   private type: string;
-  private setCurrentIdTarget: string;
+  // private setCurrentIdTarget: string;
 
   public constructor(
     folders: FolderState,
-    files: FileState,
-    setCurrentIdTarget: string
+    files: FileState
+    // setCurrentIdTarget: string
   ) {
     // super();
     this.files = files;
     this.folders = folders;
-    this.setCurrentIdTarget = setCurrentIdTarget;
+    // this.setCurrentIdTarget = setCurrentIdTarget;
     this.trashZone = null;
     this.selectedId = null;
     this.dropZoneId = null;
@@ -141,7 +141,7 @@ class DnD {
         delete this.files[this.selectedId!];
       }
       unmountComponent(this.selectedId!);
-      this.setCurrentIdTarget = "folder-container";
+      // this.setCurrentIdTarget = "folder-container";
       this.trashZone?.classList.remove("delete__zone--over");
     } catch (error) {
       alert("OOPS! an error occurred");

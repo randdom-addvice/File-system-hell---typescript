@@ -15,3 +15,6 @@ class App extends Folder {
 let app = new App();
 
 window.addEventListener("load", () => app.init());
+window.addEventListener("contextmenu", function (e: Event) {
+  e.preventDefault();
+});

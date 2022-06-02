@@ -13,6 +13,7 @@ import {
 } from "./interfaces/interface";
 import {
   BackdropWithSpinner,
+  DropDownContext,
   FileBlock,
   FolderBlock,
   renderComponent,
@@ -25,6 +26,29 @@ import { selectDomElement } from "./utils";
 const req = new API();
 
 // let DND = new DragNDrop();
+
+class GlobalState {
+  private rootDirPath: string;
+  private rootDirName: string;
+  protected folders: FolderState; //{someId: {...IFolder}, someId: {...IFolder}} ( [key: string]: IFolder)
+  private workspaceName: string;
+  private File: File;
+  public currentIdTarget: string | null;
+  public isFolderSelected: boolean | null;
+  DND: DragNDrop;
+
+  public constructor() {
+    // super();
+    this.rootDirPath = "";
+    this.rootDirName = "";
+    this.currentIdTarget = null;
+    this.isFolderSelected = null;
+    this.workspaceName = "Work space";
+    this.folders = {};
+    this.File = new File();
+    this.DND = new DragNDrop(this.folders, this.File.allFiles);
+  }
+}
 
 class File {
   public files: FileState;
@@ -44,8 +68,17 @@ class File {
     this.files = { ...this.files, [param.id]: param.file };
   }
 
-  private handleFileClick(e: Event) {
+  private handleFileClick(e: MouseEvent): void {
     e.stopPropagation();
+    const currentTarget = e.currentTarget as HTMLElement;
+    console.log(this.files);
+
+    let folder = new Folder();
+    if (e.button === 2) {
+      folder.currentIdTarget = currentTarget.dataset.file_id!;
+      folder.isFolderSelected = currentTarget.dataset.type === "folder"; //set the "isFolderSelected" property on the Folder class to be used in the "deleteFolderOrFile method"
+      folder.showDropDownContext(currentTarget.dataset.file_id!);
+    }
   }
 
   public addEventListenerToFiles(DND: DragNDrop) {
@@ -77,7 +110,9 @@ class File {
         folder.id
       );
       // this.addEventListenerToFiles();
+
       this.files[i.file_id] = { ...i };
+      console.log(this.files);
     });
     // collapseAllFolders();
   }
@@ -87,10 +122,10 @@ class Folder {
   private rootDirPath: string;
   private rootDirName: string;
   protected folders: FolderState; //{someId: {...IFolder}, someId: {...IFolder}} ( [key: string]: IFolder)
-  protected currentIdTarget: string | null;
   private workspaceName: string;
   private File: File;
-  private isFolderSelected: boolean | null;
+  public currentIdTarget: string | null;
+  public isFolderSelected: boolean | null;
   DND: DragNDrop;
 
   public constructor() {
@@ -104,10 +139,11 @@ class Folder {
     this.File = new File();
     this.DND = new DragNDrop(
       this.folders,
-      this.File.allFiles,
-      this.setCurrentIdTarget
+      this.File.allFiles
+      // this.setCurrentIdTarget
     );
     this.onFolderClick = this.onFolderClick.bind(this);
+    this.deleteFileOrFolder = this.deleteFileOrFolder.bind(this);
   }
 
   get allFolders(): FolderState {
@@ -200,11 +236,19 @@ class Folder {
     }
   }
 
+  public showDropDownContext(id: string): void {
+    unmountComponent("dropdown__context");
+    let container = selectDomElement(`[id='${id}']`) as HTMLElement;
+    container.insertAdjacentHTML("beforeend", DropDownContext());
+    this.addEventListenerToContextDropdown();
+  }
+
   private onFolderClick(e: MouseEvent) {
     e.stopPropagation();
     let currentTarget = e.currentTarget as HTMLElement;
     let folderId = currentTarget.dataset.folder_id as string;
     this.currentIdTarget = folderId;
+    this.isFolderSelected = currentTarget.dataset.type === "folder";
 
     if (e.button === 0) {
       //detect a left click on folder-click
@@ -220,7 +264,7 @@ class Folder {
       currentTarget.classList.toggle("explorer__content-folder--collapsed");
       subFolders.forEach((i) => i.classList.toggle("d-none"));
     }
-    //  if (e.button === 2) showDropDownContext(folderId);
+    if (e.button === 2) this.showDropDownContext(folderId);
   }
 
   private addFileOrFolder(type: string): void {
@@ -230,7 +274,7 @@ class Folder {
     }
     const id = this.folders[this.currentIdTarget]
       ? this.currentIdTarget
-      : (this.currentIdTarget = "folder-container");
+      : (this.currentIdTarget = "folder-container"); //incase a folder is removed
 
     const parentFolder = selectDomElement(`[id='${id}']`) as HTMLElement;
     const isFileInput = type === "file";
@@ -260,6 +304,39 @@ class Folder {
       5
     )}...`;
     workSpaceNavBtnContainer.classList.remove("d-none");
+  }
+
+  private async deleteFileOrFolder(e: MouseEvent): Promise<void> {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log(this.currentIdTarget);
+
+    try {
+      if (this.isFolderSelected) {
+        let path = this.folders[this.currentIdTarget!].path;
+        await req.deleteDirectory(path);
+        delete this.folders[this.currentIdTarget!];
+      } else {
+        console.log(this.File.files);
+        let path = this.File.files[this.currentIdTarget!].file_dir;
+
+        // await req.deleteFile(path);
+        // delete this.File.files[this.currentIdTarget!];
+        // await http.delete("/files/delete", { data: { file_dir: path } });
+      }
+      unmountComponent(this.currentIdTarget!);
+    } catch (error) {
+      console.log(error);
+      alert("An error occurred");
+    }
+  }
+
+  private addEventListenerToContextDropdown(): void {
+    let deleteBtn = selectDomElement("#delete");
+    let renameBtn = selectDomElement("#rename");
+
+    deleteBtn?.addEventListener("mousedown", this.deleteFileOrFolder);
+    // renameBtn.addEventListener("mousedown", renameFolder);
   }
 
   private addEventListenersToFolders() {
@@ -336,7 +413,7 @@ class Folder {
     let newFilePath = selectedFolder.slice(pathIndex + 1).join("/");
     const res = await req.getFileInDirectory(newFilePath);
 
-    if (res.data.files.length) {
+    if (res.data.files?.length) {
       //check if folder has files in it and add it to the current iteration(directory)
       directory.files = res.data.files;
 
