@@ -1,4 +1,4 @@
-import { File, Folder } from "./app";
+import { Folder } from "./app";
 import { BackdropWithSpinner, renderComponent } from "./components";
 
 class App extends Folder {

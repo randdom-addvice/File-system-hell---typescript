@@ -245,6 +245,7 @@ export const BackdropWithSpinner = () => {
         z-index: 9998;
         align-items: center;
         justify-content: center;
+        backdrop-filter: blur(1px)
         }
 
         .loading-overlay.is-active {
@@ -252,8 +253,6 @@ export const BackdropWithSpinner = () => {
         }
 
         .code {
-        font-family: monospace;
-        /*   font-size: .9em; */
         color: #dd4a68;
         background-color: rgb(238, 238, 238);
         padding: 0 3px;

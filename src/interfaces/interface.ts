@@ -37,7 +37,6 @@ interface SyntheticEvent<T> extends Event {
    */
   currentTarget: EventTarget & T & HTMLElement;
 
-  // If you thought this should be `EventTarget & T`, see https://github.com/DefinitelyTyped/DefinitelyTyped/pull/12239
   /**
    * A reference to the element from which the event was originally dispatched.
    * This might be a child element to the element on which the event listener is registered.

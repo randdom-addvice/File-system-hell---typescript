@@ -51,6 +51,9 @@ class DnD {
     this.trashZone = trashZone;
     this.type = currentTarget.dataset.type as string;
     this.trashZone.classList.add("delete__zone--over");
+    console.log(this.files);
+    console.log(this.folders);
+
     this.selectedId =
       currentTarget.dataset.folder_id! || currentTarget.dataset.file_id!; //set the id of the selected folder or file to be used for further operation
   }

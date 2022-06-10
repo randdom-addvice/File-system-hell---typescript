@@ -28,60 +28,64 @@ const req = new API();
 // let DND = new DragNDrop();
 
 class GlobalState {
-  private rootDirPath: string;
-  private rootDirName: string;
-  protected folders: FolderState; //{someId: {...IFolder}, someId: {...IFolder}} ( [key: string]: IFolder)
-  private workspaceName: string;
-  private File: File;
-  public currentIdTarget: string | null;
-  public isFolderSelected: boolean | null;
+  protected rootDirPath: string;
+  protected rootDirName: string;
+  public folders: FolderState; //{someId: {...IFolder}, someId: {...IFolder}} ( [key: string]: IFolder)
+  protected workspaceName: string;
+  public files: FileState;
+  protected currentIdTarget: string | null;
+  protected isFolderSelected: boolean | null;
   DND: DragNDrop;
 
   public constructor() {
-    // super();
     this.rootDirPath = "";
     this.rootDirName = "";
     this.currentIdTarget = null;
     this.isFolderSelected = null;
     this.workspaceName = "Work space";
     this.folders = {};
-    this.File = new File();
-    this.DND = new DragNDrop(this.folders, this.File.allFiles);
-  }
-}
-
-class File {
-  public files: FileState;
-  // DND: DragNDrop;
-  // Folder: Folder;
-  constructor() {
     this.files = {};
-    // this.Folder = new Folder();
-    // this.DND = new DragNDrop(this.Folder.allFolders, this.files);
-  }
-
-  get allFiles(): FileState {
-    return this.files;
+    this.DND = new DragNDrop(this.folders, this.files);
   }
 
   set setFiles(param: { id: string; file: IFile }) {
     this.files = { ...this.files, [param.id]: param.file };
   }
+}
+
+class File extends GlobalState {
+  constructor() {
+    super();
+    this.checkForFilesInDirectories =
+      this.checkForFilesInDirectories.bind(this);
+    this.handleFileClick = this.handleFileClick.bind(this);
+  }
+
+  // get allFiles(): FileState {
+  //   return this.files;
+  // }
+
+  // set setFiles(param: { id: string; file: IFile }) {
+  //   this.files = { ...this.files, [param.id]: param.file };
+  // }
 
   private handleFileClick(e: MouseEvent): void {
     e.stopPropagation();
     const currentTarget = e.currentTarget as HTMLElement;
+    // console.log(this);
     console.log(this.files);
+    console.log(this.folders);
+    // console.log(this.workspaceName);
 
     let folder = new Folder();
     if (e.button === 2) {
-      folder.currentIdTarget = currentTarget.dataset.file_id!;
-      folder.isFolderSelected = currentTarget.dataset.type === "folder"; //set the "isFolderSelected" property on the Folder class to be used in the "deleteFolderOrFile method"
+      this.currentIdTarget = currentTarget.dataset.file_id!;
+      this.isFolderSelected = currentTarget.dataset.type === "folder"; //set the "isFolderSelected" property on the Folder class to be used in the "deleteFolderOrFile method"
       folder.showDropDownContext(currentTarget.dataset.file_id!);
     }
   }
 
-  public addEventListenerToFiles(DND: DragNDrop) {
+  public addEventListenerToFiles() {
     const allFiles = <HTMLElement[]>(
       Array.from(document.querySelectorAll(".explorer__content-file"))
     );
@@ -89,11 +93,11 @@ class File {
     allFiles.forEach((i) => {
       i.addEventListener("mousedown", this.handleFileClick);
 
-      i.addEventListener("dragstart", DND.drag);
-      i.addEventListener("dragover", DND.dragOver);
-      i.addEventListener("drop", DND.dragDrop);
-      i.addEventListener("dragleave", DND.dragLeave);
-      i.addEventListener("dragend", DND.dragEnd);
+      i.addEventListener("dragstart", this.DND.drag);
+      i.addEventListener("dragover", this.DND.dragOver);
+      i.addEventListener("drop", this.DND.dragDrop);
+      i.addEventListener("dragleave", this.DND.dragLeave);
+      i.addEventListener("dragend", this.DND.dragEnd);
     });
   }
 
@@ -109,41 +113,54 @@ class File {
         }),
         folder.id
       );
-      // this.addEventListenerToFiles();
-
+      this.addEventListenerToFiles();
       this.files[i.file_id] = { ...i };
-      console.log(this.files);
+      // this.setFiles = { id: i.file_id, file: i };
+      // console.log(this);
     });
     // collapseAllFolders();
   }
 }
 
-class Folder {
-  private rootDirPath: string;
-  private rootDirName: string;
-  protected folders: FolderState; //{someId: {...IFolder}, someId: {...IFolder}} ( [key: string]: IFolder)
-  private workspaceName: string;
-  private File: File;
-  public currentIdTarget: string | null;
-  public isFolderSelected: boolean | null;
-  DND: DragNDrop;
+class Folder extends GlobalState {
+  // private rootDirPath: string;
+  // private rootDirName: string;
+  // protected folders: FolderState; //{someId: {...IFolder}, someId: {...IFolder}} ( [key: string]: IFolder)
+  // private workspaceName: string;
+  // private File: File;
+  // public currentIdTarget: string | null;
+  // public isFolderSelected: boolean | null;
+  // DND: DragNDrop;
 
   public constructor() {
-    // super();
-    this.rootDirPath = "";
-    this.rootDirName = "";
-    this.currentIdTarget = null;
-    this.isFolderSelected = null;
-    this.workspaceName = "Work space";
-    this.folders = {};
-    this.File = new File();
-    this.DND = new DragNDrop(
-      this.folders,
-      this.File.allFiles
-      // this.setCurrentIdTarget
-    );
+    super();
+    // this.rootDirPath = "";
+    // this.rootDirName = "";
+    // this.currentIdTarget = null;
+    // this.isFolderSelected = null;
+    // this.workspaceName = "Work space";
+    // this.folders = {};
+    // this.File = new File();
+    // this.DND = new DragNDrop(
+    //   this.folders,
+    //   this.File.allFiles
+    //   // this.setCurrentIdTarget
+    // );
+    let methods = Object.getOwnPropertyNames(Object.getPrototypeOf(this));
+    methods
+      .filter((method) => method !== "constructor")
+      .forEach((method: string) => {
+        let getterSetters = ["allFolders", "setCurrentIdTarget"];
+        console.log(method);
+        if (!getterSetters.includes(method)) {
+          //this[method as keyof typeof this] = this
+          let _this: { [key: string]: any } = this;
+          _this[method] = _this[method].bind(this);
+        }
+      });
     this.onFolderClick = this.onFolderClick.bind(this);
-    this.deleteFileOrFolder = this.deleteFileOrFolder.bind(this);
+    this.addFileToDirectory = this.addFileToDirectory.bind(this);
+    // this.deleteFileOrFolder = this.deleteFileOrFolder.bind(this);
   }
 
   get allFolders(): FolderState {
@@ -250,6 +267,11 @@ class Folder {
     this.currentIdTarget = folderId;
     this.isFolderSelected = currentTarget.dataset.type === "folder";
 
+    console.log(this);
+    console.log(this.workspaceName);
+    console.log(this.folders);
+    console.log(this.files);
+
     if (e.button === 0) {
       //detect a left click on folder-click
       const children = Array.from(currentTarget.children);
@@ -264,6 +286,8 @@ class Folder {
       currentTarget.classList.toggle("explorer__content-folder--collapsed");
       subFolders.forEach((i) => i.classList.toggle("d-none"));
     }
+    // console.log(this.showDropDownContext);
+
     if (e.button === 2) this.showDropDownContext(folderId);
   }
 
@@ -309,7 +333,9 @@ class Folder {
   private async deleteFileOrFolder(e: MouseEvent): Promise<void> {
     e.preventDefault();
     e.stopPropagation();
-    console.log(this.currentIdTarget);
+    console.log(this);
+    console.log(this.workspaceName);
+    console.log(this.folders);
 
     try {
       if (this.isFolderSelected) {
@@ -317,8 +343,8 @@ class Folder {
         await req.deleteDirectory(path);
         delete this.folders[this.currentIdTarget!];
       } else {
-        console.log(this.File.files);
-        let path = this.File.files[this.currentIdTarget!].file_dir;
+        console.log(this.files);
+        let path = this.files[this.currentIdTarget!].file_dir;
 
         // await req.deleteFile(path);
         // delete this.File.files[this.currentIdTarget!];
@@ -416,9 +442,10 @@ class Folder {
     if (res.data.files?.length) {
       //check if folder has files in it and add it to the current iteration(directory)
       directory.files = res.data.files;
+      let file = new File();
 
-      this.File.checkForFilesInDirectories(directory);
-      this.File.addEventListenerToFiles(this.DND);
+      file.checkForFilesInDirectories(directory);
+      file.addEventListenerToFiles();
       this.collapseAllFolders();
     }
   }
