@@ -3,7 +3,8 @@ import { API } from "./api";
 import DragNDrop from "./DnD";
 // import { DnD as DragNDrop } from "./ConcreteImplementation";
 import "./styles/styles.scss";
-
+import store from "./store";
+import "./state";
 import {
   FileState,
   FolderClass,
@@ -151,7 +152,6 @@ class Folder extends GlobalState {
       .filter((method) => method !== "constructor")
       .forEach((method: string) => {
         let getterSetters = ["allFolders", "setCurrentIdTarget"];
-        console.log(method);
         if (!getterSetters.includes(method)) {
           //this[method as keyof typeof this] = this
           let _this: { [key: string]: any } = this;
@@ -441,7 +441,8 @@ class Folder extends GlobalState {
 
     if (res.data.files?.length) {
       //check if folder has files in it and add it to the current iteration(directory)
-      directory.files = res.data.files;
+      Object.assign({}, directory, { files: res.data.files }); // directory.files = res.data.files(doesn't work in strict mode)
+
       let file = new File();
 
       file.checkForFilesInDirectories(directory);
@@ -486,6 +487,7 @@ class Folder extends GlobalState {
         directories.forEach(async (dir, index, array) => {
           dir.id = uid();
           this.folders[dir.id] = dir;
+          store.commit("setFolders", { id: dir.id, folder: dir });
           renderComponent(
             FolderBlock({ folder_name: dir.name, id: dir.id }),
             "folder-container"

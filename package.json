@@ -30,6 +30,8 @@
   },
   "dependencies": {
     "axios": "^0.27.2",
+    "dragonbinder": "^2.2.0",
+    "immutable": "^4.1.0",
     "shortid": "^2.2.16"
   }
 }
