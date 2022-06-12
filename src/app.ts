@@ -3,8 +3,7 @@ import { API } from "./api";
 import DragNDrop from "./DnD";
 // import { DnD as DragNDrop } from "./ConcreteImplementation";
 import "./styles/styles.scss";
-import store from "./store";
-import "./state";
+import "./store";
 import {
   FileState,
   FolderClass,
@@ -487,7 +486,6 @@ class Folder extends GlobalState {
         directories.forEach(async (dir, index, array) => {
           dir.id = uid();
           this.folders[dir.id] = dir;
-          store.commit("setFolders", { id: dir.id, folder: dir });
           renderComponent(
             FolderBlock({ folder_name: dir.name, id: dir.id }),
             "folder-container"
