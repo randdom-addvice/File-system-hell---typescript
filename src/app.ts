@@ -1,9 +1,9 @@
 import uid from "shortid";
 import { API } from "./api";
 import DragNDrop from "./DnD";
+import Store from "./store";
 // import { DnD as DragNDrop } from "./ConcreteImplementation";
 import "./styles/styles.scss";
-import "./store";
 import {
   FileState,
   FolderClass,
@@ -24,6 +24,10 @@ import {
 } from "./components";
 import { selectDomElement } from "./utils";
 const req = new API();
+
+Store.subscribeEvents(() => {
+  console.log(Store.getState);
+}, []);
 
 // let DND = new DragNDrop();
 
