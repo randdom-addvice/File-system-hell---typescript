@@ -26,14 +26,11 @@ import { selectDomElement } from "./utils";
 const req = new API();
 let DND = new DragNDrop();
 class GlobalState {
-  // public folders: FolderState; //{someId: {...IFolder}, someId: {...IFolder}} ( [key: string]: IFolder)
-  // public files: FileState;
   protected rootDirPath: string;
   protected rootDirName: string;
   protected workspaceName: string;
   protected currentIdTarget: string | null;
   protected isFolderSelected: boolean | null;
-  // DND: DragNDrop;
 
   public constructor() {
     this.rootDirPath = "";
@@ -41,14 +38,7 @@ class GlobalState {
     this.currentIdTarget = null;
     this.isFolderSelected = null;
     this.workspaceName = "Work space";
-    // this.folders = {};
-    // this.files = {};
-    // this.DND = new DragNDrop(this.folders, this.files);
   }
-
-  // set setFiles(param: { id: string; file: IFile }) {
-  //   this.files = { ...this.files, [param.id]: param.file };
-  // }
 }
 
 class File extends GlobalState {
@@ -58,15 +48,6 @@ class File extends GlobalState {
       this.checkForFilesInDirectories.bind(this);
     this.handleFileClick = this.handleFileClick.bind(this);
   }
-
-  // get allFiles(): FileState {
-  //   return this.files;
-  // }
-
-  // set setFiles(param: { id: string; file: IFile }) {
-  //   this.files = { ...this.files, [param.id]: param.file };
-  // }
-
   private handleFileClick(e: MouseEvent): void {
     e.stopPropagation();
     const currentTarget = e.currentTarget as HTMLElement;
@@ -109,38 +90,15 @@ class File extends GlobalState {
         folder.id
       );
       this.addEventListenerToFiles();
-      // this.files[i.file_id] = { ...i };
       Store.commit("setFiles", { id: i.file_id, file: i });
-      // this.setFiles = { id: i.file_id, file: i };
     });
     // collapseAllFolders();
   }
 }
 
 class Folder extends GlobalState {
-  // private rootDirPath: string;
-  // private rootDirName: string;
-  // protected folders: FolderState; //{someId: {...IFolder}, someId: {...IFolder}} ( [key: string]: IFolder)
-  // private workspaceName: string;
-  // private File: File;
-  // public currentIdTarget: string | null;
-  // public isFolderSelected: boolean | null;
-  // DND: DragNDrop;
-
   public constructor() {
     super();
-    // this.rootDirPath = "";
-    // this.rootDirName = "";
-    // this.currentIdTarget = null;
-    // this.isFolderSelected = null;
-    // this.workspaceName = "Work space";
-    // this.folders = {};
-    // this.File = new File();
-    // this.DND = new DragNDrop(
-    //   this.folders,
-    //   this.File.allFiles
-    //   // this.setCurrentIdTarget
-    // );
     let methods = Object.getOwnPropertyNames(Object.getPrototypeOf(this));
     methods
       .filter((method) => method !== "constructor")
@@ -155,10 +113,6 @@ class Folder extends GlobalState {
     this.onFolderClick = this.onFolderClick.bind(this);
     this.addFileToDirectory = this.addFileToDirectory.bind(this);
     // this.deleteFileOrFolder = this.deleteFileOrFolder.bind(this);
-  }
-
-  set setCurrentIdTarget(id: string) {
-    this.currentIdTarget = id;
   }
 
   private async onTextFieldChange(e: KeyboardEvent): Promise<void> {
@@ -224,12 +178,6 @@ class Folder extends GlobalState {
               path: `${newFilePath}`,
             },
           });
-          // Store.getState.folders[folderId] = {
-          // child: [],
-          // id: folderId,
-          // name: folderName,
-          // path: `${newFilePath}`,
-          // };
           renderComponent(
             FolderBlock({
               folder_name: fileName,
@@ -240,6 +188,39 @@ class Folder extends GlobalState {
             }),
             this.currentIdTarget!
           );
+        } else {
+          let fileId = uid();
+          let file = new File();
+
+          let newFile = {
+            file_name: fileName,
+            file_ext: `.${extName}`,
+            output_dir: newFilePath,
+            content: "",
+          };
+          await req.createFile(newFile);
+          Store.commit("setFiles", {
+            id: fileId,
+            file: {
+              file_content: "",
+              file_id: fileId,
+              file_name: fileName,
+              file_type: extName,
+              file_dir: newFilePath
+                ? `${this.rootDirName}\\${newFilePath}\\${fileName}.${extName}`
+                : `${this.rootDirName}\\${fileName}.${extName}`,
+            },
+          });
+          renderComponent(
+            FileBlock({
+              name: fileName,
+              id: fileId,
+              file_id: fileId,
+              ext: `.${extName}`,
+            }),
+            this.currentIdTarget!
+          );
+          file.addEventListenerToFiles();
         }
 
         unmountComponent("explorer__content-input");
@@ -498,11 +479,4 @@ class Folder extends GlobalState {
     }
   }
 }
-Store.subscribeEvents(
-  (_, changes) => {
-    // console.log(Store.getState, "state changed");
-  },
-  ["files", "folders"]
-);
-
 export { File, Folder };
