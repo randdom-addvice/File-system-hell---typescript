@@ -353,6 +353,19 @@ class Folder extends GlobalState {
     });
   }
 
+  private refreshFolders = () => {
+    const container = selectDomElement("#folder-container");
+    //remove all folders before refreshing
+    if (container) {
+      do {
+        if (container.firstChild) container.removeChild(container.firstChild);
+      } while (container.firstChild);
+      renderComponent(BackdropWithSpinner(), "app");
+      this.handleFolderCreation();
+      this.addGlobalEventListener();
+    }
+  };
+
   protected addGlobalEventListener() {
     const addFileBtn = selectDomElement("#add__file") as HTMLElement;
     const addFolderBtn = selectDomElement("#add__folder") as HTMLElement;
@@ -382,20 +395,20 @@ class Folder extends GlobalState {
     addFolderBtn?.addEventListener("click", () =>
       this.addFileOrFolder("folder")
     );
-    // refreshFolderBtn?.addEventListener("click", refreshFolders);
-    // collapseFoldersBtn>.addEventListener("click", () => {
-    //   let el = Array.from(
-    //     document.querySelectorAll(".explorer__content-folder--collapsed")
-    //   );
-    //   let arrowIcons = Array.from(
-    //     document.querySelectorAll(".explorer__content-folder--collapsed i")
-    //   );
-    //   el.forEach((i) =>
-    //     i.classList.remove("explorer__content-folder--collapsed")
-    //   );
-    //   arrowIcons.forEach((i) => i.classList.remove("fa-rotate-90"));
-    //   collapseAllFolders();
-    // });
+    refreshFolderBtn?.addEventListener("click", this.refreshFolders);
+    collapseFoldersBtn.addEventListener("click", () => {
+      let el = Array.from(
+        document.querySelectorAll(".explorer__content-folder--collapsed")
+      );
+      let arrowIcons = Array.from(
+        document.querySelectorAll(".explorer__content-folder--collapsed i")
+      );
+      el.forEach((i) =>
+        i.classList.remove("explorer__content-folder--collapsed")
+      );
+      arrowIcons.forEach((i) => i.classList.remove("fa-rotate-90"));
+      this.collapseAllFolders();
+    });
   }
 
   /**
@@ -431,7 +444,6 @@ class Folder extends GlobalState {
           FolderBlock({ folder_name: i.name, id: i.id, nested: "nested" }),
           `${dir.id}`
         ); //add a nested folder inside of the parent
-        // this.folders[i.id] = i;
         Store.commit("setFolders", { id: i.id, dir: i });
         this.addFileToDirectory(i);
         if (i.child && i.child.length) this.checkForSubFolders(i); //check if subfolder also has a child the re-run function
@@ -459,9 +471,7 @@ class Folder extends GlobalState {
       let wait: Promise<void> = new Promise((resolve) => {
         directories.forEach(async (dir, index, array) => {
           dir.id = uid();
-          // this.folders[dir.id] = dir;
           Store.commit("setFolders", { id: dir.id, dir });
-          // Store.getState.folders[dir.id] = dir;
           renderComponent(
             FolderBlock({ folder_name: dir.name, id: dir.id }),
             "folder-container"
