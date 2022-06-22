@@ -1,6 +1,5 @@
 import CreateStore from "vanilla-ts-store";
-import { FileState, FolderState } from "./interfaces/interface";
-
+import { FileState, FolderState, IFolder } from "./interfaces/interface";
 interface StoreInterface {
   rootDirPath: string;
   rootDirName: string;
@@ -15,11 +14,19 @@ const Store = new CreateStore<StoreInterface>({
   state: {
     rootDirPath: "",
     rootDirName: "",
-    currentIdTarget: null,
+    currentIdTarget: "null",
     isFolderSelected: null,
     workspaceName: "Work space",
     folders: {},
     files: {},
+  },
+  mutations: {
+    setFolders(state, params) {
+      state.folders[params.id] = params.dir;
+    },
+    setFiles(state, params) {
+      state.files[params.id] = params.file;
+    },
   },
 });
 

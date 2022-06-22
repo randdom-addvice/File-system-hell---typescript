@@ -25,10 +25,6 @@ import {
 import { selectDomElement } from "./utils";
 const req = new API();
 
-Store.subscribeEvents(() => {
-  console.log(Store.getState);
-}, []);
-
 // let DND = new DragNDrop();
 
 class GlobalState {
@@ -118,9 +114,9 @@ class File extends GlobalState {
         folder.id
       );
       this.addEventListenerToFiles();
-      this.files[i.file_id] = { ...i };
+      // this.files[i.file_id] = { ...i };
+      Store.commit("setFiles", { id: i.file_id, file: i });
       // this.setFiles = { id: i.file_id, file: i };
-      // console.log(this);
     });
     // collapseAllFolders();
   }
@@ -270,11 +266,6 @@ class Folder extends GlobalState {
     this.currentIdTarget = folderId;
     this.isFolderSelected = currentTarget.dataset.type === "folder";
 
-    console.log(this);
-    console.log(this.workspaceName);
-    console.log(this.folders);
-    console.log(this.files);
-
     if (e.button === 0) {
       //detect a left click on folder-click
       const children = Array.from(currentTarget.children);
@@ -346,7 +337,6 @@ class Folder extends GlobalState {
         await req.deleteDirectory(path);
         delete this.folders[this.currentIdTarget!];
       } else {
-        console.log(this.files);
         let path = this.files[this.currentIdTarget!].file_dir;
 
         // await req.deleteFile(path);
@@ -403,6 +393,8 @@ class Folder extends GlobalState {
     trashZone?.addEventListener("dragleave", () =>
       trashZone?.classList.remove("delete__zone--over--dashed")
     );
+    // Store.commit("setFolders");
+    // Store.commit("setFolders");
 
     // explorerContainer.addEventListener("mousedown", (e: Event) => {
     //   const target = e.target as Element;
@@ -444,8 +436,8 @@ class Folder extends GlobalState {
 
     if (res.data.files?.length) {
       //check if folder has files in it and add it to the current iteration(directory)
-      Object.assign({}, directory, { files: res.data.files }); // directory.files = res.data.files(doesn't work in strict mode)
-
+      // Object.assign({}, directory, { files: res.data.files }); // directory.files = res.data.files(doesn't work in strict mode)
+      directory.files = res.data.files;
       let file = new File();
 
       file.checkForFilesInDirectories(directory);
@@ -463,6 +455,7 @@ class Folder extends GlobalState {
           `${dir.id}`
         ); //add a nested folder inside of the parent
         this.folders[i.id] = i;
+        Store.commit("setFolders", { id: i.id, dir: i });
         this.addFileToDirectory(i);
         if (i.child && i.child.length) this.checkForSubFolders(i); //check if subfolder also has a child the re-run function
       });
@@ -489,7 +482,8 @@ class Folder extends GlobalState {
       let wait: Promise<void> = new Promise((resolve) => {
         directories.forEach(async (dir, index, array) => {
           dir.id = uid();
-          this.folders[dir.id] = dir;
+          // this.folders[dir.id] = dir;
+          Store.commit("setFolders", { id: dir.id, dir });
           renderComponent(
             FolderBlock({ folder_name: dir.name, id: dir.id }),
             "folder-container"
@@ -507,5 +501,11 @@ class Folder extends GlobalState {
     }
   }
 }
+Store.subscribeEvents(
+  (_, changes) => {
+    console.log(changes, "state changed");
+  },
+  ["files"]
+);
 
 export { File, Folder };
