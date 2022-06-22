@@ -24,18 +24,16 @@ import {
 } from "./components";
 import { selectDomElement } from "./utils";
 const req = new API();
-
-// let DND = new DragNDrop();
-
+let DND = new DragNDrop();
 class GlobalState {
+  // public folders: FolderState; //{someId: {...IFolder}, someId: {...IFolder}} ( [key: string]: IFolder)
+  // public files: FileState;
   protected rootDirPath: string;
   protected rootDirName: string;
-  public folders: FolderState; //{someId: {...IFolder}, someId: {...IFolder}} ( [key: string]: IFolder)
   protected workspaceName: string;
-  public files: FileState;
   protected currentIdTarget: string | null;
   protected isFolderSelected: boolean | null;
-  DND: DragNDrop;
+  // DND: DragNDrop;
 
   public constructor() {
     this.rootDirPath = "";
@@ -43,14 +41,14 @@ class GlobalState {
     this.currentIdTarget = null;
     this.isFolderSelected = null;
     this.workspaceName = "Work space";
-    this.folders = {};
-    this.files = {};
-    this.DND = new DragNDrop(this.folders, this.files);
+    // this.folders = {};
+    // this.files = {};
+    // this.DND = new DragNDrop(this.folders, this.files);
   }
 
-  set setFiles(param: { id: string; file: IFile }) {
-    this.files = { ...this.files, [param.id]: param.file };
-  }
+  // set setFiles(param: { id: string; file: IFile }) {
+  //   this.files = { ...this.files, [param.id]: param.file };
+  // }
 }
 
 class File extends GlobalState {
@@ -72,9 +70,6 @@ class File extends GlobalState {
   private handleFileClick(e: MouseEvent): void {
     e.stopPropagation();
     const currentTarget = e.currentTarget as HTMLElement;
-    // console.log(this);
-    console.log(this.files);
-    console.log(this.folders);
     // console.log(this.workspaceName);
 
     let folder = new Folder();
@@ -93,11 +88,11 @@ class File extends GlobalState {
     allFiles.forEach((i) => {
       i.addEventListener("mousedown", this.handleFileClick);
 
-      i.addEventListener("dragstart", this.DND.drag);
-      i.addEventListener("dragover", this.DND.dragOver);
-      i.addEventListener("drop", this.DND.dragDrop);
-      i.addEventListener("dragleave", this.DND.dragLeave);
-      i.addEventListener("dragend", this.DND.dragEnd);
+      i.addEventListener("dragstart", DND.drag);
+      i.addEventListener("dragover", DND.dragOver);
+      i.addEventListener("drop", DND.dragDrop);
+      i.addEventListener("dragleave", DND.dragLeave);
+      i.addEventListener("dragend", DND.dragEnd);
     });
   }
 
@@ -162,10 +157,6 @@ class Folder extends GlobalState {
     // this.deleteFileOrFolder = this.deleteFileOrFolder.bind(this);
   }
 
-  get allFolders(): FolderState {
-    return this.folders;
-  }
-
   set setCurrentIdTarget(id: string) {
     this.currentIdTarget = id;
   }
@@ -185,7 +176,7 @@ class Folder extends GlobalState {
         ? value.split(".")[value.split(".").length - 1]
         : ""; //check for extension name
       const selectedFolder =
-        this.folders[this.currentIdTarget!]?.path.split("\\") ||
+        Store.getState.folders[this.currentIdTarget!]?.path.split("\\") ||
         this.rootDirPath.split("\\"); //add to root dir if no folder is selected
       const index = selectedFolder.indexOf(this.rootDirName);
       const newFilePath =
@@ -224,12 +215,21 @@ class Folder extends GlobalState {
             );
             return;
           }
-          this.folders[folderId] = {
-            child: [],
+          Store.commit("setFolders", {
             id: folderId,
-            name: folderName,
-            path: `${newFilePath}`,
-          };
+            dir: {
+              child: [],
+              id: folderId,
+              name: folderName,
+              path: `${newFilePath}`,
+            },
+          });
+          // Store.getState.folders[folderId] = {
+          // child: [],
+          // id: folderId,
+          // name: folderName,
+          // path: `${newFilePath}`,
+          // };
           renderComponent(
             FolderBlock({
               folder_name: fileName,
@@ -290,7 +290,7 @@ class Folder extends GlobalState {
     if (!this.currentIdTarget) {
       this.currentIdTarget = "folder-container"; //update ui to add file or folder to root folder container
     }
-    const id = this.folders[this.currentIdTarget]
+    const id = Store.getState.folders[this.currentIdTarget]
       ? this.currentIdTarget
       : (this.currentIdTarget = "folder-container"); //incase a folder is removed
 
@@ -327,17 +327,15 @@ class Folder extends GlobalState {
   private async deleteFileOrFolder(e: MouseEvent): Promise<void> {
     e.preventDefault();
     e.stopPropagation();
-    console.log(this);
-    console.log(this.workspaceName);
-    console.log(this.folders);
 
     try {
       if (this.isFolderSelected) {
-        let path = this.folders[this.currentIdTarget!].path;
+        let path = Store.getState.folders[this.currentIdTarget!].path;
         await req.deleteDirectory(path);
-        delete this.folders[this.currentIdTarget!];
+        Store.commit("deleteFolder", this.currentIdTarget);
+        // delete Store.getState.folders[this.currentIdTarget!];
       } else {
-        let path = this.files[this.currentIdTarget!].file_dir;
+        let path = Store.getState.files[this.currentIdTarget!].file_dir;
 
         // await req.deleteFile(path);
         // delete this.File.files[this.currentIdTarget!];
@@ -366,11 +364,11 @@ class Folder extends GlobalState {
       i.addEventListener("mousedown", this.onFolderClick);
       i.addEventListener("mouseenter", () => this.handleFolderHover()); //call from an arrow function to prevent binding issues with "this"
 
-      i.addEventListener("dragstart", this.DND.drag);
-      i.addEventListener("dragover", this.DND.dragOver);
-      i.addEventListener("drop", this.DND.dragDrop);
-      i.addEventListener("dragleave", this.DND.dragLeave);
-      i.addEventListener("dragend", this.DND.dragEnd);
+      i.addEventListener("dragstart", DND.drag);
+      i.addEventListener("dragover", DND.dragOver);
+      i.addEventListener("drop", DND.dragDrop);
+      i.addEventListener("dragleave", DND.dragLeave);
+      i.addEventListener("dragend", DND.dragEnd);
     });
   }
 
@@ -388,13 +386,11 @@ class Folder extends GlobalState {
     ) as HTMLElement;
     let trashZone = selectDomElement("#trash__zone");
 
-    trashZone?.addEventListener("dragover", this.DND.trashZoneDragOver);
-    trashZone?.addEventListener("drop", this.DND.dropInTrash);
+    trashZone?.addEventListener("dragover", DND.trashZoneDragOver);
+    trashZone?.addEventListener("drop", DND.dropInTrash);
     trashZone?.addEventListener("dragleave", () =>
       trashZone?.classList.remove("delete__zone--over--dashed")
     );
-    // Store.commit("setFolders");
-    // Store.commit("setFolders");
 
     // explorerContainer.addEventListener("mousedown", (e: Event) => {
     //   const target = e.target as Element;
@@ -454,7 +450,7 @@ class Folder extends GlobalState {
           FolderBlock({ folder_name: i.name, id: i.id, nested: "nested" }),
           `${dir.id}`
         ); //add a nested folder inside of the parent
-        this.folders[i.id] = i;
+        // this.folders[i.id] = i;
         Store.commit("setFolders", { id: i.id, dir: i });
         this.addFileToDirectory(i);
         if (i.child && i.child.length) this.checkForSubFolders(i); //check if subfolder also has a child the re-run function
@@ -484,6 +480,7 @@ class Folder extends GlobalState {
           dir.id = uid();
           // this.folders[dir.id] = dir;
           Store.commit("setFolders", { id: dir.id, dir });
+          // Store.getState.folders[dir.id] = dir;
           renderComponent(
             FolderBlock({ folder_name: dir.name, id: dir.id }),
             "folder-container"
@@ -503,9 +500,9 @@ class Folder extends GlobalState {
 }
 Store.subscribeEvents(
   (_, changes) => {
-    console.log(changes, "state changed");
+    // console.log(Store.getState, "state changed");
   },
-  ["files"]
+  ["files", "folders"]
 );
 
 export { File, Folder };

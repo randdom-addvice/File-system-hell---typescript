@@ -33,6 +33,6 @@
     "dragonbinder": "^2.2.0",
     "immutable": "^4.1.0",
     "shortid": "^2.2.16",
-    "vanilla-ts-store": "^2.2.0"
+    "vanilla-ts-store": "^2.3.0"
   }
 }

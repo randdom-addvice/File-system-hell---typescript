@@ -1,6 +1,7 @@
 import { API } from "./api";
 import { unmountComponent } from "./components";
 import { FileState, FolderState } from "./interfaces/interface";
+import Store from "./store";
 import { selectDomElement } from "./utils";
 
 interface DnDClass {
@@ -13,24 +14,16 @@ interface DnDClass {
 }
 const req = new API();
 class DnD {
-  private files: FileState;
-  private folders: FolderState;
   private trashZone: HTMLDivElement | null;
   private selectedId: string | null;
   private dropZoneId: string | null;
   private type: string;
   // private setCurrentIdTarget: string;
 
-  public constructor(
-    folders: FolderState,
-    files: FileState
-    // setCurrentIdTarget: string
-  ) {
+  public constructor() {
     // super();
-    this.files = files;
-    this.folders = folders;
     // this.setCurrentIdTarget = setCurrentIdTarget;
-    this.trashZone = null;
+    this.trashZone = null; //<HTMLDivElement>document.getElementById("trash__zone");
     this.selectedId = null;
     this.dropZoneId = null;
     this.type = "";
@@ -51,9 +44,6 @@ class DnD {
     this.trashZone = trashZone;
     this.type = currentTarget.dataset.type as string;
     this.trashZone.classList.add("delete__zone--over");
-    console.log(this.files);
-    console.log(this.folders);
-
     this.selectedId =
       currentTarget.dataset.folder_id! || currentTarget.dataset.file_id!; //set the id of the selected folder or file to be used for further operation
   }
@@ -74,6 +64,7 @@ class DnD {
   public async dragDrop(e: DragEvent): Promise<void> {
     e.preventDefault();
     e.stopPropagation();
+    const { folders, files } = Store.getState;
     const folderMoved: boolean = this.type === "folder";
     let currentTarget = e.currentTarget as HTMLElement;
     let fileName: string;
@@ -88,19 +79,28 @@ class DnD {
     if (this.dropZoneId === this.selectedId) return; //prevent further execution if dragged item id in the same folder as the drop zone
 
     if (folderMoved) {
-      oldDir = this.folders[this.selectedId!].path; //source
-      newDir = this.folders[this.dropZoneId].path; //target
-      const newDirPathName: string = this.folders[this.selectedId!].name;
+      oldDir = folders[this.selectedId!].path; //source
+      newDir = folders[this.dropZoneId].path; //target
+      const newDirPathName: string = folders[this.selectedId!].name;
       await req.moveDirectory(oldDir, newDir);
       this.swap();
-      this.folders[this.selectedId!].path = `${newDir}\\${newDirPathName}`; //update the new path of the file moved
+      // folders[this.selectedId!].path = `${newDir}\\${newDirPathName}`; //update the new path of the file moved
+      Store.commit("updateDirectoryPath", {
+        id: this.selectedId,
+        path: `${newDir}\\${newDirPathName}`,
+      });
     } else {
-      fileName = this.files[this.selectedId!].file_name;
-      oldDir = this.files[this.selectedId!].file_dir;
-      newDir = `${this.folders[this.dropZoneId].path}\\${fileName}`;
+      // console.log(files[this.selectedId!], this.selectedId);
+      fileName = files[this.selectedId!].file_name;
+      oldDir = files[this.selectedId!].file_dir;
+      newDir = `${folders[this.dropZoneId].path}\\${fileName}`;
       await req.moveFile(oldDir, newDir);
       this.swap();
-      this.files[this.selectedId!].file_dir = newDir;
+      Store.commit("updateFilePath", {
+        id: this.selectedId,
+        path: newDir,
+      });
+      // files[this.selectedId!].file_dir = newDir;
     }
   }
 
@@ -134,19 +134,21 @@ class DnD {
 
   public async dropInTrash(e: DragEvent): Promise<void> {
     e.stopPropagation();
+    const { folders, files } = Store.getState;
     try {
       this.trashZone?.classList.remove("delete__zone--over--dashed");
       if (this.type === "folder") {
-        await req.deleteDirectory(this.folders[this.selectedId!].path);
-        delete this.folders[this.selectedId!];
+        await req.deleteDirectory(folders[this.selectedId!].path);
+        Store.commit("deleteFolder", this.selectedId);
       } else {
-        await req.deleteFile(this.files[this.selectedId!].file_dir);
-        delete this.files[this.selectedId!];
+        await req.deleteFile(files[this.selectedId!].file_dir);
+        Store.commit("deleteFile", this.selectedId);
       }
       unmountComponent(this.selectedId!);
       // this.setCurrentIdTarget = "folder-container";
       this.trashZone?.classList.remove("delete__zone--over");
     } catch (error) {
+      console.log(error);
       alert("OOPS! an error occurred");
     }
     e.preventDefault();

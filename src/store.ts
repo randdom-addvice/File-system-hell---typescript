@@ -1,10 +1,8 @@
 import CreateStore from "vanilla-ts-store";
+
 import { FileState, FolderState, IFolder } from "./interfaces/interface";
 interface StoreInterface {
-  rootDirPath: string;
-  rootDirName: string;
   folders: FolderState; //{someId: {...IFolder}, someId: {...IFolder}} ( [key: string]: IFolder)
-  workspaceName: string;
   files: FileState;
   currentIdTarget: string | null;
   isFolderSelected: boolean | null;
@@ -12,11 +10,8 @@ interface StoreInterface {
 
 const Store = new CreateStore<StoreInterface>({
   state: {
-    rootDirPath: "",
-    rootDirName: "",
     currentIdTarget: "null",
     isFolderSelected: null,
-    workspaceName: "Work space",
     folders: {},
     files: {},
   },
@@ -26,6 +21,24 @@ const Store = new CreateStore<StoreInterface>({
     },
     setFiles(state, params) {
       state.files[params.id] = params.file;
+    },
+    setCurrentIdTarget(state, val) {
+      state.currentIdTarget = val;
+    },
+    setIsFolderSelected(state, val) {
+      state.isFolderSelected = val;
+    },
+    deleteFolder(state, id) {
+      delete state.folders[id];
+    },
+    deleteFile(state, id) {
+      delete state.files[id];
+    },
+    updateDirectoryPath(state, p) {
+      state.folders[p.id].path = p.path;
+    },
+    updateFilePath(state, p) {
+      state.files[p.id].file_dir = p.path;
     },
   },
 });
