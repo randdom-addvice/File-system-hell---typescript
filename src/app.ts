@@ -164,11 +164,6 @@ class Folder {
             newDirPath = `${
               state.rootDirPath
             }\\${newFilePath}\\${fileName.trim()}`;
-          console.log(selectedFolder, "selectedFolder");
-          console.log(Store.getState.folders[state.currentIdTarget!], "state");
-
-          console.log(newDirPath, "nedDirPath");
-          console.log(index, "index");
           if (!res.data.success) {
             textFieldContainer.insertAdjacentHTML(
               "beforeend",
@@ -273,19 +268,19 @@ class Folder {
     state.isFolderSelected = currentTarget.dataset.type === "folder";
 
     if (e.button === 0) {
-      // this.expandFolder(currentTarget, folderId);
+      this.expandFolder(currentTarget, folderId);
       // //detect a left click on folder-click
-      const children = Array.from(currentTarget.children);
-      const folderArrowIcon = <HTMLElement>(
-        document.querySelector(`[id='${folderId}'] i.fa-angle-right`)
-      );
-      const subFolders = children.filter((i) =>
-        Array.from(i.classList).includes("nested")
-      ); //get all children item in the parent folder being clicked
+      // const children = Array.from(currentTarget.children);
+      // const folderArrowIcon = <HTMLElement>(
+      //   document.querySelector(`[id='${folderId}'] i.fa-angle-right`)
+      // );
+      // const subFolders = children.filter((i) =>
+      //   Array.from(i.classList).includes("nested")
+      // ); //get all children item in the parent folder being clicked
 
-      folderArrowIcon?.classList.toggle("fa-rotate-90");
-      currentTarget.classList.toggle("explorer__content-folder--collapsed");
-      subFolders.forEach((i) => i.classList.toggle("d-none"));
+      // folderArrowIcon?.classList.toggle("fa-rotate-90");
+      // currentTarget.classList.toggle("explorer__content-folder--collapsed");
+      // subFolders.forEach((i) => i.classList.toggle("d-none"));
     }
     // console.log(this.showDropDownContext);
 
@@ -436,25 +431,28 @@ class Folder {
 
     deleteBtn?.addEventListener("mousedown", this.deleteFileOrFolder);
     renameBtn?.addEventListener("mousedown", this.renameFolder);
-    addFolderBtn?.addEventListener("mousedown", (e: MouseEvent) => {
-      e.stopPropagation();
 
+    const addFolderOrFileContextEvent = (type: "file" | "folder") => {
       const selectedFolder = selectDomElement(
         `[id='${state.currentIdTarget}']`
-      );
+      ) as HTMLElement;
       if (
         !selectedFolder?.classList.contains(
           "explorer__content-folder--collapsed"
         )
       )
-        selectedFolder?.classList.add("explorer__content-folder--collapsed");
-      this.addFileOrFolder("folder");
+        this.expandFolder(selectedFolder, state.currentIdTarget || "");
+      this.addFileOrFolder(type);
       unmountComponent("dropdown__context");
+    };
+
+    addFolderBtn?.addEventListener("mousedown", (e: MouseEvent) => {
+      e.stopPropagation();
+      addFolderOrFileContextEvent("folder");
     });
     addFileBtn?.addEventListener("mousedown", (e: MouseEvent) => {
       e.stopPropagation();
-      this.addFileOrFolder("file");
-      unmountComponent("dropdown__context");
+      addFolderOrFileContextEvent("file");
     });
   }
 
