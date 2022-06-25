@@ -251,9 +251,9 @@ class Folder {
         `[id='${folderId || state.currentIdTarget}'] i.fa-angle-right`
       )
     );
-    const subFolders = children.filter((i) =>
-      Array.from(i.classList).includes("nested")
-    ); //get all children item in the parent folder being clicked
+    const subFolders = children.filter((i) => i.classList.contains("nested")); //get all children item in the parent folder being clicked
+    console.log(folderTarget.title);
+    // console.log(subFolders);
 
     folderArrowIcon?.classList.toggle("fa-rotate-90");
     folderTarget.classList.toggle("explorer__content-folder--collapsed");
@@ -267,23 +267,7 @@ class Folder {
     state.currentIdTarget = folderId;
     state.isFolderSelected = currentTarget.dataset.type === "folder";
 
-    if (e.button === 0) {
-      this.expandFolder(currentTarget, folderId);
-      // //detect a left click on folder-click
-      // const children = Array.from(currentTarget.children);
-      // const folderArrowIcon = <HTMLElement>(
-      //   document.querySelector(`[id='${folderId}'] i.fa-angle-right`)
-      // );
-      // const subFolders = children.filter((i) =>
-      //   Array.from(i.classList).includes("nested")
-      // ); //get all children item in the parent folder being clicked
-
-      // folderArrowIcon?.classList.toggle("fa-rotate-90");
-      // currentTarget.classList.toggle("explorer__content-folder--collapsed");
-      // subFolders.forEach((i) => i.classList.toggle("d-none"));
-    }
-    // console.log(this.showDropDownContext);
-
+    if (e.button === 0) this.expandFolder(currentTarget, folderId);
     if (e.button === 2) this.showDropDownContext(folderId);
   }
 
@@ -551,6 +535,7 @@ class Folder {
 
       file.checkForFilesInDirectories(directory);
       file.addEventListenerToFiles();
+      this.addEventListenersToFolders();
       this.collapseAllFolders();
     }
   }
