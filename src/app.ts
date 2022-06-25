@@ -23,6 +23,7 @@ import {
   unmountComponent,
 } from "./components";
 import { selectDomElement } from "./utils";
+import { AxiosError } from "axios";
 const req = new API();
 let DND = new DragNDrop();
 
@@ -30,8 +31,10 @@ interface StateInterface {
   rootDirPath: string;
   rootDirName: string;
   workspaceName: string;
-  currentIdTarget: string | null;
-  isFolderSelected: boolean | null;
+  currentIdTarget: string | null /* folder or file id being clicked on */;
+  isFolderSelected:
+    | boolean
+    | null /* boolean folder to determine if a folder or file is clicked */;
 }
 
 const state: StateInterface = {
@@ -112,6 +115,7 @@ class File {
 }
 
 class Folder {
+  private currentElementTarget: HTMLElement | null = null;
   public constructor() {
     let methods = Object.getOwnPropertyNames(Object.getPrototypeOf(this));
     methods
@@ -255,7 +259,7 @@ class Folder {
     this.addEventListenerToContextDropdown();
   }
 
-  private onFolderClick(e: MouseEvent) {
+  private onFolderClick(e: MouseEvent): void {
     e.stopPropagation();
     let currentTarget = e.currentTarget as HTMLElement;
     let folderId = currentTarget.dataset.folder_id as string;
@@ -344,12 +348,83 @@ class Folder {
     }
   }
 
+  private async onRenameInputChange(e: KeyboardEvent): Promise<void> {
+    e.stopPropagation();
+    ("folder"); //check if we right clicked on a folder or file
+    let defaultValue = (e.target as HTMLInputElement).defaultValue;
+    let value = (e.target as HTMLInputElement).value;
+    let textNode = document.createTextNode(value);
+    let fileIcon = selectDomElement(
+      `[id='${state.currentIdTarget}'] .fileIcon__wrapper`
+    ) as HTMLElement;
+    let fileExt = value.split(".").pop();
+
+    if (!state.isFolderSelected) fileIcon.innerHTML = renderIcon(`.${fileExt}`); //update file icon on tying
+    try {
+      if (e.key === "Enter" || e.code === "Enter") {
+        if (state.isFolderSelected)
+          await req.renameFolder({
+            old_file_path: Store.getState.folders[state.currentIdTarget!].path,
+            new_directory_name: value,
+          });
+        if (state.isFolderSelected === false)
+          await req.renameFile({
+            old_file_path:
+              Store.getState.files[state.currentIdTarget!].file_dir,
+            new_file_name: value,
+          });
+        this.currentElementTarget?.replaceChild(
+          textNode,
+          this.currentElementTarget.childNodes[0]
+        );
+      }
+      if (e.key === "Escape" || e.code === "Escape") {
+        textNode.nodeValue = defaultValue;
+        if (!state.isFolderSelected)
+          fileIcon.innerHTML = renderIcon(`.${defaultValue.split(".").pop()}`); //reset the file extension and value to it's initial state
+        this.currentElementTarget?.replaceChild(
+          textNode,
+          this.currentElementTarget.childNodes[0]
+        );
+      }
+    } catch (error) {
+      console.log(error);
+      let err = error as AxiosError;
+      if (error instanceof Error && err.response && err.response.status === 400)
+        return alert((err.response?.data as { message: string }).message);
+      alert("OOps an error occurred");
+    }
+  }
+
+  private renameFolder = async (e: MouseEvent): Promise<void> => {
+    let currentTarget = e.currentTarget as HTMLElement;
+    e.stopPropagation();
+    let target = selectDomElement(
+      `[id='${state.currentIdTarget}'] .name__wrapper`
+    );
+    this.currentElementTarget = target;
+    let value = target?.textContent;
+    let inputNode = document.createElement("input");
+    Object.assign(inputNode, {
+      className: "rename__input",
+      id: "rename__input",
+      value,
+      defaultValue: value,
+      onkeyup: this.onRenameInputChange,
+      autocomplete: "off",
+      onmousedown: (ev: MouseEvent) => ev.stopPropagation(),
+    });
+    target?.replaceChild(inputNode, target.childNodes[0]);
+    setTimeout(() => document.getElementById("rename__input")?.focus(), 0); //not sure why the setTimeout works on the function, but it did
+    unmountComponent("dropdown__context");
+  };
+
   private addEventListenerToContextDropdown(): void {
     let deleteBtn = selectDomElement("#delete");
     let renameBtn = selectDomElement("#rename");
 
     deleteBtn?.addEventListener("mousedown", this.deleteFileOrFolder);
-    // renameBtn.addEventListener("mousedown", renameFolder);
+    renameBtn?.addEventListener("mousedown", this.renameFolder);
   }
 
   private addEventListenersToFolders() {
