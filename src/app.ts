@@ -44,22 +44,6 @@ const state: StateInterface = {
   isFolderSelected: null,
   workspaceName: "Work space",
 };
-// class statee {
-//   protected rootDirPath: string;
-//   protected rootDirName: string;
-//   protected workspaceName: string;
-//   protected currentIdTarget: string | null;
-//   protected isFolderSelected: boolean | null;
-
-//   public constructor() {
-//     state.rootDirPath = "";
-//     state.rootDirName = "";
-//     state.currentIdTarget = null;
-//     state.isFolderSelected = null;
-//     state.workspaceName = "Work space";
-//   }
-// }
-
 class File {
   constructor() {
     this.checkForFilesInDirectories =
@@ -168,6 +152,8 @@ class Folder {
 
         if (state.isFolderSelected) {
           let newDirPath = `${newFilePath}\\${fileName.trim()}`;
+          // console.log(state.currentIdTarget);
+
           const res = await req.createDirectory(newDirPath);
           let folderId = uid();
           let folderSplit = newDirPath.split("\\");
@@ -178,7 +164,11 @@ class Folder {
             newDirPath = `${
               state.rootDirPath
             }\\${newFilePath}\\${fileName.trim()}`;
+          console.log(selectedFolder, "selectedFolder");
+          console.log(Store.getState.folders[state.currentIdTarget!], "state");
 
+          console.log(newDirPath, "nedDirPath");
+          console.log(index, "index");
           if (!res.data.success) {
             textFieldContainer.insertAdjacentHTML(
               "beforeend",
@@ -194,7 +184,7 @@ class Folder {
               child: [],
               id: folderId,
               name: folderName,
-              path: `${newFilePath}`,
+              path: `${newDirPath}`,
             },
           });
           renderComponent(
@@ -259,6 +249,22 @@ class Folder {
     this.addEventListenerToContextDropdown();
   }
 
+  private expandFolder(folderTarget: HTMLElement, folderId: string): void {
+    const children = Array.from(folderTarget.children);
+    const folderArrowIcon = <HTMLElement>(
+      document.querySelector(
+        `[id='${folderId || state.currentIdTarget}'] i.fa-angle-right`
+      )
+    );
+    const subFolders = children.filter((i) =>
+      Array.from(i.classList).includes("nested")
+    ); //get all children item in the parent folder being clicked
+
+    folderArrowIcon?.classList.toggle("fa-rotate-90");
+    folderTarget.classList.toggle("explorer__content-folder--collapsed");
+    subFolders.forEach((i) => i.classList.toggle("d-none"));
+  }
+
   private onFolderClick(e: MouseEvent): void {
     e.stopPropagation();
     let currentTarget = e.currentTarget as HTMLElement;
@@ -267,7 +273,8 @@ class Folder {
     state.isFolderSelected = currentTarget.dataset.type === "folder";
 
     if (e.button === 0) {
-      //detect a left click on folder-click
+      // this.expandFolder(currentTarget, folderId);
+      // //detect a left click on folder-click
       const children = Array.from(currentTarget.children);
       const folderArrowIcon = <HTMLElement>(
         document.querySelector(`[id='${folderId}'] i.fa-angle-right`)
@@ -285,7 +292,7 @@ class Folder {
     if (e.button === 2) this.showDropDownContext(folderId);
   }
 
-  private addFileOrFolder(type: string): void {
+  private addFileOrFolder(type: "file" | "folder"): void {
     // fileOrFolder = type;
     if (!state.currentIdTarget) {
       state.currentIdTarget = "folder-container"; //update ui to add file or folder to root folder container
@@ -303,9 +310,12 @@ class Folder {
     const textField = selectDomElement(
       "#textField__wrapper input"
     ) as HTMLElement;
-    textField.focus();
+    setTimeout(() => textField.focus(), 10);
     textField.addEventListener("keyup", (e: KeyboardEvent) =>
       this.onTextFieldChange(e)
+    );
+    textField.addEventListener("mousedown", (e: MouseEvent) =>
+      e.stopPropagation()
     );
   }
 
@@ -397,7 +407,6 @@ class Folder {
   }
 
   private renameFolder = async (e: MouseEvent): Promise<void> => {
-    let currentTarget = e.currentTarget as HTMLElement;
     e.stopPropagation();
     let target = selectDomElement(
       `[id='${state.currentIdTarget}'] .name__wrapper`
@@ -422,9 +431,31 @@ class Folder {
   private addEventListenerToContextDropdown(): void {
     let deleteBtn = selectDomElement("#delete");
     let renameBtn = selectDomElement("#rename");
+    let addFolderBtn = selectDomElement("#add__folder-context");
+    let addFileBtn = selectDomElement("#add__file-context");
 
     deleteBtn?.addEventListener("mousedown", this.deleteFileOrFolder);
     renameBtn?.addEventListener("mousedown", this.renameFolder);
+    addFolderBtn?.addEventListener("mousedown", (e: MouseEvent) => {
+      e.stopPropagation();
+
+      const selectedFolder = selectDomElement(
+        `[id='${state.currentIdTarget}']`
+      );
+      if (
+        !selectedFolder?.classList.contains(
+          "explorer__content-folder--collapsed"
+        )
+      )
+        selectedFolder?.classList.add("explorer__content-folder--collapsed");
+      this.addFileOrFolder("folder");
+      unmountComponent("dropdown__context");
+    });
+    addFileBtn?.addEventListener("mousedown", (e: MouseEvent) => {
+      e.stopPropagation();
+      this.addFileOrFolder("file");
+      unmountComponent("dropdown__context");
+    });
   }
 
   private addEventListenersToFolders() {
