@@ -68,6 +68,7 @@ body {
   &__content {
     border-right: 1px solid $grey;
     padding-top: 1rem;
+    max-width: 228px;
 
     &-input {
       width: 100%;
@@ -139,6 +140,7 @@ body {
         align-items: center;
         padding: 0.3rem;
         cursor: pointer;
+        overflow: hidden;
       }
       &-arrow {
         margin-right: 0.5rem;

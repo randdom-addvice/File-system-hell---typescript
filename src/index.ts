@@ -1,5 +1,6 @@
 import { Folder } from "./app";
 import { BackdropWithSpinner, renderComponent } from "./components";
+import { selectDomElement } from "./utils";
 // const obj = {
 //   foo: "bar",
 // };
@@ -40,6 +41,9 @@ class App extends Folder {
     renderComponent(BackdropWithSpinner(), "app");
     this.handleFolderCreation();
     this.addGlobalEventListener();
+    const foldersContainer = selectDomElement(".explorer__content");
+    foldersContainer?.addEventListener("mouseover", this.handleFolderHover);
+    foldersContainer?.addEventListener("mouseout", this.onFolderMouseOut);
   }
 }
 

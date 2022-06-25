@@ -252,8 +252,6 @@ class Folder {
       )
     );
     const subFolders = children.filter((i) => i.classList.contains("nested")); //get all children item in the parent folder being clicked
-    console.log(folderTarget.title);
-    // console.log(subFolders);
 
     folderArrowIcon?.classList.toggle("fa-rotate-90");
     folderTarget.classList.toggle("explorer__content-folder--collapsed");
@@ -296,21 +294,6 @@ class Folder {
     textField.addEventListener("mousedown", (e: MouseEvent) =>
       e.stopPropagation()
     );
-  }
-
-  private handleFolderHover(): void {
-    let workspaceNameContainer = selectDomElement(
-      ".file__name"
-    ) as HTMLDivElement;
-    let workSpaceNavBtnContainer = selectDomElement(
-      ".explorer__content-headerNav ul"
-    ) as HTMLUListElement;
-
-    workspaceNameContainer.textContent = `${state.workspaceName.substring(
-      0,
-      5
-    )}...`;
-    workSpaceNavBtnContainer.classList.remove("d-none");
   }
 
   private async deleteFileOrFolder(e: MouseEvent): Promise<void> {
@@ -407,6 +390,19 @@ class Folder {
     unmountComponent("dropdown__context");
   };
 
+  private refreshFolders = () => {
+    const container = selectDomElement("#folder-container");
+    //remove all folders before refreshing
+    if (container) {
+      do {
+        if (container.firstChild) container.removeChild(container.firstChild);
+      } while (container.firstChild);
+      renderComponent(BackdropWithSpinner(), "app");
+      this.handleFolderCreation();
+      this.addGlobalEventListener();
+    }
+  };
+
   private addEventListenerToContextDropdown(): void {
     let deleteBtn = selectDomElement("#delete");
     let renameBtn = selectDomElement("#rename");
@@ -446,7 +442,7 @@ class Folder {
     );
     folders.forEach((i) => {
       i.addEventListener("mousedown", this.onFolderClick);
-      i.addEventListener("mouseenter", () => this.handleFolderHover()); //call from an arrow function to prevent binding issues with "this"
+      // i.addEventListener("mouseenter", () => this.handleFolderHover()); //call from an arrow function to prevent binding issues with "this"
 
       i.addEventListener("dragstart", DND.drag);
       i.addEventListener("dragover", DND.dragOver);
@@ -455,19 +451,6 @@ class Folder {
       i.addEventListener("dragend", DND.dragEnd);
     });
   }
-
-  private refreshFolders = () => {
-    const container = selectDomElement("#folder-container");
-    //remove all folders before refreshing
-    if (container) {
-      do {
-        if (container.firstChild) container.removeChild(container.firstChild);
-      } while (container.firstChild);
-      renderComponent(BackdropWithSpinner(), "app");
-      this.handleFolderCreation();
-      this.addGlobalEventListener();
-    }
-  };
 
   protected addGlobalEventListener() {
     const addFileBtn = selectDomElement("#add__file") as HTMLElement;
@@ -591,6 +574,34 @@ class Folder {
     } catch (error) {
       console.log(error);
     }
+  }
+
+  protected handleFolderHover(): void {
+    let workspaceNameContainer = selectDomElement(
+      ".file__name"
+    ) as HTMLDivElement;
+    let workSpaceNavBtnContainer = selectDomElement(
+      ".explorer__content-headerNav ul"
+    ) as HTMLUListElement;
+
+    workspaceNameContainer.textContent = `${state.workspaceName.substring(
+      0,
+      5
+    )}...`;
+    workSpaceNavBtnContainer.classList.remove("d-none");
+  }
+
+  protected onFolderMouseOut(): void {
+    let workspaceNameContainer = selectDomElement(
+      ".file__name"
+    ) as HTMLDivElement;
+    let workSpaceNavBtnContainer = selectDomElement(
+      ".explorer__content-headerNav ul"
+    ) as HTMLUListElement;
+
+    workspaceNameContainer.textContent = state.workspaceName;
+
+    workSpaceNavBtnContainer?.classList.add("d-none");
   }
 }
 export { File, Folder };
