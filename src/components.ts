@@ -201,7 +201,7 @@ export const FileView = (props: {
   ext: string;
   saved: boolean;
   id: string;
-  fn: any;
+  fn: () => void;
 }) => {
   const wrapper = document.createElement("div");
   const container = document.createElement("div");
@@ -225,21 +225,7 @@ export const FileView = (props: {
     container.append(d);
     wrapper.append(container);
   });
-  console.log(wrapper);
   return wrapper;
-
-  // return `
-  //    <div class="explorer__view-header-files" data-file_view_id="${props.id}">
-  //       <div class="explorer__view-header-files-container">
-  //           <span class="icon">
-  //               ${renderIcon(props.ext)}
-  //           </span>
-  //           <span class="name">${props.name}</span>
-  //           <span class="status ${props.saved ? "status--visible" : ""}"></span>
-  //           <span class="remove">x</span>
-  //       </div>
-  //   </div>
-  // `;
 };
 
 export const TextField = (props: { isFileInput: boolean }) => {

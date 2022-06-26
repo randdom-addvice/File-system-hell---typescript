@@ -42,8 +42,18 @@ class App extends Folder {
     this.handleFolderCreation();
     this.addGlobalEventListener();
     const foldersContainer = selectDomElement(".explorer__content");
+    const workSpaceToggler = selectDomElement("#workspace-toggler");
     foldersContainer?.addEventListener("mouseover", this.handleFolderHover);
     foldersContainer?.addEventListener("mouseout", this.onFolderMouseOut);
+    workSpaceToggler?.addEventListener("click", (e: MouseEvent) => {
+      let icon = selectDomElement("#workspace-toggler i.fa-angle-right");
+      let explorerFolders = selectDomElement("#folder-container");
+      icon?.classList.toggle("fa-rotate-90");
+      explorerFolders?.classList.toggle(
+        "explorer__content-container--collapsed"
+      );
+      console.log("clicked", e.currentTarget);
+    });
   }
 }
 

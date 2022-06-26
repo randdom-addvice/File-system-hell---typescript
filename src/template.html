@@ -35,9 +35,40 @@
                 <section class="explorer__content">
                     <div class="explorer__content-wrapper-bg">
                         <div class="explorer__content-wrapper">
+                            <!-- <div class="explorer__content-head"></div> -->
                             <div class="explorer__content-headerNav">
                                 <nav>
-                                    <div class="file__name">Work space</div>
+                                    <div class="explorer__content-headerNav-group">
+                                        <span>
+                                            <i class="fa-solid fa-angle-right"></i>
+                                        </span>
+                                        <div class="file__namef">Open Editors</div>
+                                    </div>
+                                    <ul class="d-none">
+                                        <li class="add__file" title="New file">
+                                            <span><i class="fa-solid fa-file-circle-plus"></i></span>
+                                        </li>
+                                        <li class="add_folder" title="New folder">
+                                            <span><i class="fa-solid fa-folder-plus"></i></span>
+                                        </li>
+                                        <li class="refresh" title="Refresh">
+                                            <span><i class="fa-solid fa-rotate-right"></i></span>
+                                        </li>
+                                        <li class="collpase" title="Collapse folders">
+                                            <span><i class="fa-solid fa-folder-open"></i></span>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
+                            <div class="explorer__content-headerNav workspace">
+                                <nav>
+                                    <div class="explorer__content-headerNav-group" id="workspace-toggler">
+                                        <span>
+                                            <i class="fa-solid fa-angle-right fa-rotate-90"></i>
+                                        </span>
+                                        <div class="file__name">Work space</div>
+                                    </div>
+
                                     <ul class="d-none">
                                         <li class="add__file" id="add__file" title="New file">
                                             <span><i class="fa-solid fa-file-circle-plus"></i></span>

@@ -30,11 +30,12 @@ body {
   min-height: 92vh;
   width: 100%;
   &__container {
-    background-color: $primary-slate-light;
+    // background-color: $primary-slate-light;
     display: grid;
     display: flex;
     grid-template-columns: 1fr 2fr 10fr;
     height: auto;
+
     @include laptopBreakpoint() {
       grid-template-columns: 1fr 3fr 8fr;
     }
@@ -69,10 +70,27 @@ body {
     }
   }
   &__content {
+    // user-select: none;
     border-right: 1px solid $grey;
-    padding-top: 1rem;
+    // padding-top: 1rem;
     min-width: 230px;
     max-width: 300px;
+
+    &-container {
+      width: 85%;
+      margin: auto;
+      background-color: #fff;
+      &--collapsed {
+        overflow-y: hidden;
+        // visibility: hidden;
+
+        height: 0;
+      }
+      &--expanded {
+        height: 100%;
+        visibility: visible;
+      }
+    }
 
     &-input {
       width: 100%;
@@ -108,28 +126,44 @@ body {
       }
     }
 
-    &-headerNav nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border: 1px solid;
-      padding: 0.13rem 0;
-      ul {
+    &-headerNav {
+      background-color: whitesmoke;
+      padding: 0.2rem;
+      &-group {
+        display: flex;
+        justify-content: space-between;
+        cursor: pointer;
+
+        div {
+          margin-left: 0.5rem;
+        }
+      }
+      nav {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        list-style: none;
+        text-transform: uppercase;
+        font-weight: 500;
+        font-size: 0.9rem;
+        // border: 1px solid;
+        padding: 0.13rem 0;
+        ul {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          list-style: none;
 
-        li {
-          margin-right: 0.2rem;
-          cursor: pointer;
+          li {
+            margin-right: 0.2rem;
+            cursor: pointer;
+          }
         }
       }
     }
 
     &-wrapper {
-      width: 85%;
-      margin: auto;
+      // width: 85%;
+      // margin: auto;
     }
     &-file {
       &:hover {
@@ -141,6 +175,7 @@ body {
     &-file {
       // border-bottom: 1px solid $dark-grey;
       transition: 0.1s linear;
+      height: 100%;
 
       position: relative;
       user-select: none;
