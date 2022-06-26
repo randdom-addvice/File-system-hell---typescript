@@ -39,6 +39,7 @@ class DnD {
 
   public drag(e: DragEvent): void {
     e.stopPropagation();
+    console.log("kk");
     const trashZone = <HTMLDivElement>document.getElementById("trash__zone");
     let currentTarget = <HTMLElement>e.currentTarget;
     this.trashZone = trashZone;

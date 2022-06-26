@@ -1,11 +1,12 @@
 import CreateStore from "vanilla-ts-store";
 
-import { FileState, FolderState, IFolder } from "./interfaces/interface";
+import { FileState, FolderState, IFile, IFolder } from "./interfaces/interface";
 interface StoreInterface {
   folders: FolderState; //{someId: {...IFolder}, someId: {...IFolder}} ( [key: string]: IFolder)
   files: FileState;
   currentIdTarget: string | null;
   isFolderSelected: boolean | null;
+  filesOnView: IFile[];
 }
 
 const Store = new CreateStore<StoreInterface>({
@@ -14,6 +15,7 @@ const Store = new CreateStore<StoreInterface>({
     isFolderSelected: null,
     folders: {},
     files: {},
+    filesOnView: [],
   },
   mutations: {
     setFolders(state, params) {
@@ -39,6 +41,17 @@ const Store = new CreateStore<StoreInterface>({
     },
     updateFilePath(state, p) {
       state.files[p.id].file_dir = p.path;
+    },
+    addFileToFileOnView(state, file) {
+      const foundFile = state.filesOnView.find(
+        (f) => f.file_id === file.file_id
+      );
+      if (foundFile) return;
+      state.filesOnView.push(file);
+    },
+    removeFileFromView(state, id) {
+      let newState = state.filesOnView.filter((i) => i.file_id !== id);
+      state.filesOnView = newState;
     },
   },
 });

@@ -15,6 +15,7 @@ import {
   BackdropWithSpinner,
   DropDownContext,
   FileBlock,
+  FileView,
   FolderBlock,
   renderComponent,
   renderIcon,
@@ -22,7 +23,7 @@ import {
   TextFieldErrorMessage,
   unmountComponent,
 } from "./components";
-import { selectDomElement } from "./utils";
+import { attachEvent, deleteDomElement, selectDomElement } from "./utils";
 import { AxiosError } from "axios";
 const req = new API();
 let DND = new DragNDrop();
@@ -56,12 +57,62 @@ class File {
     const currentTarget = e.currentTarget as HTMLElement;
     state.isFolderSelected = currentTarget.dataset.type === "folder";
     state.currentIdTarget = currentTarget.dataset.file_id!;
-    console.log(state.currentIdTarget);
+    this.addFileToFileOnView(
+      state.currentIdTarget,
+      Store.getState.files[state.currentIdTarget]
+    );
+    Store.commit(
+      "addFileToFileOnView",
+      Store.getState.files[state.currentIdTarget]
+    );
     let folder = new Folder();
     if (e.button === 2) {
       state.isFolderSelected = false; //currentTarget.dataset.type === "folder"; //set the "isFolderSelected" property on the Folder class to be used in the "deleteFolderOrFile method"
       folder.showDropDownContext(currentTarget.dataset.file_id!);
     }
+  }
+
+  private addFileToFileOnView(id: string, file: IFile): void {
+    const container = selectDomElement("#explorer__view-header-group");
+    const isExist = Store.getState.filesOnView.find((i) => i.file_id === id);
+    if (isExist) return;
+    container?.appendChild(
+      FileView({
+        name: file.file_name,
+        id: file.file_id,
+        saved: false,
+        ext: file.file_type,
+        fn: () => this.removeFileFromOnView(file.file_id),
+      })
+    );
+    console.log(Store.getState);
+    Store.getState.filesOnView.forEach((i) => {
+      // console.log(Store.getState.filesOnView);
+      // renderComponent(
+      // FileView({
+      //   name: file.file_name,
+      //   id: file.file_id,
+      //   saved: false,
+      //   ext: file.file_type,
+      //   fn: () => this.removeFileFromOnView(i.file_id),
+      // }),
+      //   "explorer__view-header-group"
+      // );
+      // (
+      //   selectDomElement(
+      //     `[data-file_view_id='${i.file_id}'] span.remove`
+      //   ) as HTMLElement
+      // ).onclick = () => this.removeFileFromOnView(i.file_id);
+    });
+    // (
+    //   selectDomElement(`[data-file_view_id='${id}'] span.remove`) as HTMLElement
+    // ).onclick = () => this.removeFileFromOnView(file.file_id);
+  }
+
+  private removeFileFromOnView(id: string) {
+    Store.commit("removeFileFromView", id);
+    const element = selectDomElement(`[data-file_view_id='${id}']`);
+    element?.remove();
   }
 
   public addEventListenerToFiles() {
@@ -70,13 +121,13 @@ class File {
     );
 
     allFiles.forEach((i) => {
-      i.addEventListener("mousedown", this.handleFileClick);
+      i.onmousedown = this.handleFileClick;
 
-      i.addEventListener("dragstart", DND.drag);
-      i.addEventListener("dragover", DND.dragOver);
-      i.addEventListener("drop", DND.dragDrop);
-      i.addEventListener("dragleave", DND.dragLeave);
-      i.addEventListener("dragend", DND.dragEnd);
+      i.ondragstart = DND.drag;
+      i.ondragover = DND.dragOver;
+      i.ondrop = DND.dragDrop;
+      i.ondragleave = DND.dragLeave;
+      i.ondragend = DND.dragEnd;
     });
   }
 
@@ -209,7 +260,7 @@ class Folder {
               file_content: "",
               file_id: fileId,
               file_name: fileName,
-              file_type: extName,
+              file_type: `.${extName}`,
               file_dir: newFilePath
                 ? `${state.rootDirName}\\${newFilePath}\\${fileName}.${extName}`
                 : `${state.rootDirName}\\${fileName}.${extName}`,
@@ -498,7 +549,6 @@ class Folder {
   }
 
   /**
-   * @interface: IDirectory
    * derive the path from current iteration path based on the index of the rootPathName in the splitted array
    * e.g:
    * if path = C:\\Users\\HP\\Documents\\NODEJS PROJECTS\\File system\\myFiles\\allDocs\\nested;
@@ -517,7 +567,7 @@ class Folder {
       let file = new File();
 
       file.checkForFilesInDirectories(directory);
-      file.addEventListenerToFiles();
+      // file.addEventListenerToFiles();
       this.addEventListenersToFolders();
       this.collapseAllFolders();
     }
@@ -546,7 +596,7 @@ class Folder {
     unmountComponent("loading-spinner");
   }
 
-  public async handleFolderCreation() {
+  protected async handleFolderCreation() {
     try {
       let {
         data: { directories, root_dir },
@@ -604,4 +654,14 @@ class Folder {
     workSpaceNavBtnContainer?.classList.add("d-none");
   }
 }
+
+// Store.subscribeEvents(
+//   (_, changes) => {
+//     const keys = Object.keys(changes);
+//     // if (keys.includes("filesOnView")) console.log(keys, "changes");
+//     console.log(Store.getState.filesOnView, "state");
+//     console.log(changes, "state");
+//   },
+//   ["filesOnView"]
+// );
 export { File, Folder };

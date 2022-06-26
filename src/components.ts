@@ -176,6 +176,72 @@ export const FileBlock = (props: {
     `;
 };
 
+export const FileView2 = (props: {
+  name: string;
+  ext: string;
+  saved: boolean;
+  id: string;
+  fn: any;
+}) => {
+  return `
+     <div class="explorer__view-header-files" data-file_view_id="${props.id}">
+        <div class="explorer__view-header-files-container">
+            <span class="icon">
+                ${renderIcon(props.ext)}
+            </span>
+            <span class="name">${props.name}</span>
+            <span class="status ${props.saved ? "status--visible" : ""}"></span>
+            <span class="remove">x</span>
+        </div>
+    </div>
+  `;
+};
+export const FileView = (props: {
+  name: string;
+  ext: string;
+  saved: boolean;
+  id: string;
+  fn: any;
+}) => {
+  const wrapper = document.createElement("div");
+  const container = document.createElement("div");
+  const icon = document.createElement("object");
+  icon.setAttribute("type", "image/svg+xml");
+  icon.setAttribute("data", "image/svg+xml");
+  wrapper.setAttribute("data-file_view_id", props.id);
+  wrapper.classList.add("explorer__view-header-files");
+  container.classList.add("explorer__view-header-files-container");
+
+  ["icon", "name", "status", "remove"].forEach((i) => {
+    const d = document.createElement("span");
+    if (i === "icon") d.innerHTML = renderIcon(props.ext);
+    if (i === "name") d.append(props.name);
+    if (i === "status") d.append(props.saved ? "status--visible" : "");
+    if (i === "remove") {
+      d.onclick = props.fn;
+      d.append("x");
+    }
+    d.classList.add(i);
+    container.append(d);
+    wrapper.append(container);
+  });
+  console.log(wrapper);
+  return wrapper;
+
+  // return `
+  //    <div class="explorer__view-header-files" data-file_view_id="${props.id}">
+  //       <div class="explorer__view-header-files-container">
+  //           <span class="icon">
+  //               ${renderIcon(props.ext)}
+  //           </span>
+  //           <span class="name">${props.name}</span>
+  //           <span class="status ${props.saved ? "status--visible" : ""}"></span>
+  //           <span class="remove">x</span>
+  //       </div>
+  //   </div>
+  // `;
+};
+
 export const TextField = (props: { isFileInput: boolean }) => {
   const textFieldIcon = props.isFileInput
     ? `<object type="image/svg+xml" data=${defaultFileIcon}></object>`
