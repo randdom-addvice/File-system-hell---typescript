@@ -646,7 +646,7 @@ class Folder {
       ".file__name"
     ) as HTMLDivElement;
     let workSpaceNavBtnContainer = selectDomElement(
-      ".explorer__content-headerNav ul"
+      ".explorer__content-headerNav.workspace ul"
     ) as HTMLUListElement;
 
     workspaceNameContainer.textContent = state.workspaceName;

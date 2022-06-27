@@ -76,6 +76,14 @@ body {
     min-width: 230px;
     max-width: 300px;
 
+    #open-editors {
+      &:hover {
+        ul.d-none {
+          display: flex !important;
+        }
+      }
+    }
+
     &-editor {
       width: 92%;
       margin-left: auto;
@@ -84,8 +92,6 @@ body {
       &--collapsed {
         overflow-y: hidden;
         height: 0;
-      }
-      &--expanded {
       }
       &-group {
         display: flex;

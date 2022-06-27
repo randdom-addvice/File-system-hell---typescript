@@ -257,24 +257,7 @@ export const OpenEditorFile = (props: {
     wrapper.appendChild(d);
     container.appendChild(wrapper);
   });
-  console.log(container);
   return container;
-  // return `
-  //    <div class="explorer__content-editor-container">
-  //       <div class="explorer__content-editor-group">
-  //           <div class="explorer__content-editor-status">x</div>
-  //           <div class="explorer__content-folder-icon">
-  //               <span class="fileIcon__wrapper">
-  //                   <object type="image/svg+xml"
-  //                       data="./assets/fileIcons/html/html.svg"></object>
-  //               </span>
-  //           </div>
-  //           <div class="explorer__content-file-name">
-  //               <span class="name__wrapper">index.ts</span>
-  //           </div>
-  //       </div>
-  //   </div>
-  // `;
 };
 
 export const TextField = (props: { isFileInput: boolean }) => {
