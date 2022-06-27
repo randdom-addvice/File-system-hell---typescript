@@ -17,6 +17,7 @@ import {
   FileBlock,
   FileView,
   FolderBlock,
+  OpenEditorFile,
   renderComponent,
   renderIcon,
   TextField,
@@ -61,6 +62,10 @@ class File {
       state.currentIdTarget,
       Store.getState.files[state.currentIdTarget]
     );
+    this.addFileToOpenEditors(
+      state.currentIdTarget,
+      Store.getState.files[state.currentIdTarget]
+    );
     Store.commit(
       "addFileToFileOnView",
       Store.getState.files[state.currentIdTarget]
@@ -85,34 +90,29 @@ class File {
         fn: () => this.removeFileFromOnView(file.file_id),
       })
     );
-    console.log(Store.getState);
-    Store.getState.filesOnView.forEach((i) => {
-      // console.log(Store.getState.filesOnView);
-      // renderComponent(
-      // FileView({
-      //   name: file.file_name,
-      //   id: file.file_id,
-      //   saved: false,
-      //   ext: file.file_type,
-      //   fn: () => this.removeFileFromOnView(i.file_id),
-      // }),
-      //   "explorer__view-header-group"
-      // );
-      // (
-      //   selectDomElement(
-      //     `[data-file_view_id='${i.file_id}'] span.remove`
-      //   ) as HTMLElement
-      // ).onclick = () => this.removeFileFromOnView(i.file_id);
-    });
-    // (
-    //   selectDomElement(`[data-file_view_id='${id}'] span.remove`) as HTMLElement
-    // ).onclick = () => this.removeFileFromOnView(file.file_id);
+  }
+
+  private addFileToOpenEditors(id: string, file: IFile): void {
+    const container = selectDomElement("#editors-container");
+    const isExist = Store.getState.filesOnView.find((i) => i.file_id === id);
+    if (isExist) return;
+    container?.appendChild(
+      OpenEditorFile({
+        name: file.file_name,
+        id: file.file_id,
+        saved: false,
+        ext: file.file_type,
+        fn: () => this.removeFileFromOnView(file.file_id),
+      })
+    );
   }
 
   private removeFileFromOnView(id: string) {
     Store.commit("removeFileFromView", id);
-    const element = selectDomElement(`[data-file_view_id='${id}']`);
-    element?.remove();
+    const fileOnView = selectDomElement(`[data-file_view_id='${id}']`);
+    const fileInEditor = selectDomElement(`[data-editor_file_id='${id}']`);
+    fileOnView?.remove();
+    fileInEditor?.remove();
   }
 
   public addEventListenerToFiles() {

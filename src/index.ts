@@ -43,6 +43,8 @@ class App extends Folder {
     this.addGlobalEventListener();
     const foldersContainer = selectDomElement(".explorer__content");
     const workSpaceToggler = selectDomElement("#workspace-toggler");
+    const editorToggler = selectDomElement("#open-editors-toggler");
+
     foldersContainer?.addEventListener("mouseover", this.handleFolderHover);
     foldersContainer?.addEventListener("mouseout", this.onFolderMouseOut);
     workSpaceToggler?.addEventListener("click", (e: MouseEvent) => {
@@ -53,6 +55,12 @@ class App extends Folder {
         "explorer__content-container--collapsed"
       );
       console.log("clicked", e.currentTarget);
+    });
+    editorToggler?.addEventListener("click", () => {
+      const icon = selectDomElement("#open-editors i.fa-angle-right");
+      const editorsContainer = selectDomElement("#editors-container");
+      icon?.classList.toggle("fa-rotate-90");
+      editorsContainer?.classList.toggle("explorer__content-editor--collapsed");
     });
   }
 }

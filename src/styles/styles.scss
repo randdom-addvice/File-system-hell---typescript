@@ -70,12 +70,65 @@ body {
     }
   }
   &__content {
-    // user-select: none;
+    user-select: none;
     border-right: 1px solid $grey;
     // padding-top: 1rem;
     min-width: 230px;
     max-width: 300px;
 
+    &-editor {
+      width: 92%;
+      margin-left: auto;
+      height: 100%;
+      visibility: visible;
+      &--collapsed {
+        overflow-y: hidden;
+        height: 0;
+      }
+      &--expanded {
+      }
+      &-group {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        cursor: pointer;
+
+        &:hover {
+          .status {
+            visibility: visible;
+          }
+        }
+      }
+      .status {
+        margin-right: 0.4rem;
+        visibility: hidden;
+        transition: all 0.2s linear;
+        border-radius: 3px;
+        width: 16px;
+        text-align: center;
+        font-size: 0.8rem;
+        cursor: pointer;
+
+        &--modified {
+          width: 15px;
+          height: 15px;
+          border-radius: 50%;
+          background: darkgrey;
+          text-align: center;
+        }
+        &:hover {
+          color: #fff;
+          background-color: $primary-color-md;
+        }
+      }
+      .icon {
+        margin-right: 1rem;
+        object {
+          width: 16px;
+          height: 16px;
+        }
+      }
+    }
     &-container {
       width: 85%;
       margin: auto;

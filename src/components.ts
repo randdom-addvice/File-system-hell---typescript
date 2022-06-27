@@ -228,6 +228,55 @@ export const FileView = (props: {
   return wrapper;
 };
 
+export const OpenEditorFile = (props: {
+  name: string;
+  ext: string;
+  saved: boolean;
+  id: string;
+  fn: () => void;
+}) => {
+  const container = document.createElement("div");
+  const wrapper = document.createElement("div");
+  const icon = document.createElement("object");
+  icon.setAttribute("type", "image/svg+xml");
+  icon.setAttribute("data", "image/svg+xml");
+  container.classList.add("explorer__content-editor-container");
+  container.setAttribute("data-editor_file_id", props.id);
+  wrapper.classList.add("explorer__content-editor-group");
+
+  ["status", "icon", "name"].forEach((i) => {
+    const d = document.createElement("span");
+    if (i === "icon") d.innerHTML = renderIcon(props.ext);
+    if (i === "name") d.append(props.name);
+    if (i === "status") d.append(props.saved ? "status--visible" : "");
+    if (i === "status") {
+      d.onclick = props.fn;
+      d.append("x");
+    }
+    d.classList.add(i);
+    wrapper.appendChild(d);
+    container.appendChild(wrapper);
+  });
+  console.log(container);
+  return container;
+  // return `
+  //    <div class="explorer__content-editor-container">
+  //       <div class="explorer__content-editor-group">
+  //           <div class="explorer__content-editor-status">x</div>
+  //           <div class="explorer__content-folder-icon">
+  //               <span class="fileIcon__wrapper">
+  //                   <object type="image/svg+xml"
+  //                       data="./assets/fileIcons/html/html.svg"></object>
+  //               </span>
+  //           </div>
+  //           <div class="explorer__content-file-name">
+  //               <span class="name__wrapper">index.ts</span>
+  //           </div>
+  //       </div>
+  //   </div>
+  // `;
+};
+
 export const TextField = (props: { isFileInput: boolean }) => {
   const textFieldIcon = props.isFileInput
     ? `<object type="image/svg+xml" data=${defaultFileIcon}></object>`
