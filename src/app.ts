@@ -50,6 +50,35 @@ const state: StateInterface = {
   isFolderSelected: null,
   workspaceName: "Work space",
 };
+
+class SearchService {
+  private searchValue: string = "";
+  private replaceValue: string = "";
+
+  refresh(): void {
+    console.log("refresh clicked");
+  }
+
+  clearSearch(): void {
+    console.log("clear search clicked");
+  }
+
+  openNewSearchEditor(): void {
+    console.log("open new search editor clicked");
+  }
+
+  collapseAll(): void {
+    console.log("collapse all clicked");
+  }
+
+  onSearchKeyUp(event: KeyboardEvent): void {
+    console.log(event);
+  }
+
+  onReplaceKeyUp(event: KeyboardEvent): void {
+    console.log(event);
+  }
+}
 class File {
   constructor() {
     this.checkForFilesInDirectories =
@@ -129,6 +158,8 @@ class File {
     fileOnView?.remove();
     fileInEditor?.remove();
     CM.removeFileContent();
+    LS.setSelectedFile(null);
+    LS.setFilesOnView(Store.getState.filesOnView);
   }
 
   public addEventListenerToFiles() {
@@ -520,20 +551,15 @@ class Folder {
   }
 
   protected addGlobalEventListener() {
-    const addFileBtn = selectDomElement("#add__file") as HTMLElement;
-    const addFolderBtn = selectDomElement("#add__folder") as HTMLElement;
-    const explorerBtn = selectDomElement("#explorer__icon-file") as HTMLElement;
-    const searchBtn = selectDomElement("#explorer__icon-search") as HTMLElement;
+    const addFileBtn = selectDomElement("#add__file");
+    const addFolderBtn = selectDomElement("#add__folder");
+    const explorerBtn = selectDomElement("#explorer__icon-file");
+    const searchBtn = selectDomElement("#explorer__icon-search");
     let trashZone = selectDomElement("#trash__zone");
-    const collapseFoldersBtn = selectDomElement(
-      "#collapse__folders"
-    ) as HTMLElement;
-    const refreshFolderBtn = selectDomElement(
-      "#refresh__folders"
-    ) as HTMLElement;
-    const explorerContainer = selectDomElement(
-      ".explorer__content"
-    ) as HTMLElement;
+    const collapseFoldersBtn = selectDomElement("#collapse__folders");
+    const refreshFolderBtn = selectDomElement("#refresh__folders");
+    const explorerContainer = selectDomElement(".explorer__content");
+    const searchContainer = selectDomElement("#search__container");
 
     trashZone?.addEventListener("dragover", DND.trashZoneDragOver);
     trashZone?.addEventListener("drop", DND.dropInTrash);
@@ -551,7 +577,7 @@ class Folder {
       this.addFileOrFolder("folder")
     );
     refreshFolderBtn?.addEventListener("click", this.refreshFolders);
-    collapseFoldersBtn.addEventListener("click", () => {
+    collapseFoldersBtn?.addEventListener("click", () => {
       let el = Array.from(
         document.querySelectorAll(".explorer__content-folder--collapsed")
       );
@@ -565,20 +591,27 @@ class Folder {
       this.collapseAllFolders();
     });
     explorerBtn?.addEventListener("click", (e: MouseEvent) => {
-      if ((e.currentTarget as HTMLElement)?.classList.contains("active")) {
-        explorerContainer?.classList.toggle("d-none");
+      const currentTarget = e.currentTarget as HTMLElement;
+      searchContainer?.classList.add("d-none");
+      explorerContainer?.classList.remove("d-none");
+      if (currentTarget?.classList.contains("active")) {
+        explorerContainer?.classList.add("d-none");
+        currentTarget.classList.remove("active");
       } else {
-        (e.currentTarget as HTMLElement)?.classList.add("active"); //add active class and show content
+        currentTarget?.classList.add("active"); //add active class and show content
         searchBtn?.classList.remove("active"); //remove active class from search
       }
-      console.log((e.currentTarget as HTMLElement)?.classList);
     });
     searchBtn?.addEventListener("click", (e: MouseEvent) => {
-      explorerBtn?.classList.remove("active"); //remove active class from explorer
+      const currentTarget = e.currentTarget as HTMLElement;
       explorerContainer?.classList.add("d-none"); //add display none to explorer
-      if ((e.currentTarget as HTMLElement)?.classList.contains("active")) {
+      searchContainer?.classList.remove("d-none");
+      if (currentTarget?.classList.contains("active")) {
+        searchContainer?.classList.add("d-none");
+        currentTarget.classList.remove("active");
       } else {
-        (e.currentTarget as HTMLElement)?.classList.add("active"); //add active class and show content
+        currentTarget?.classList.add("active"); //add active class and show content
+        explorerBtn?.classList.remove("active");
       }
     });
   }

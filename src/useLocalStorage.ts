@@ -63,7 +63,7 @@ export default class UseLocalStorage extends LocalStorage<Keys> {
     return this.get(Keys.SELECTED_FILE);
   }
 
-  public setSelectedFile(file: IFile) {
+  public setSelectedFile(file: IFile | null) {
     this.set(Keys.SELECTED_FILE, JSON.stringify(file));
   }
 

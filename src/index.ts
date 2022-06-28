@@ -33,7 +33,6 @@ class App extends Folder {
       explorerFolders?.classList.toggle(
         "explorer__content-container--collapsed"
       );
-      console.log("clicked", e.currentTarget);
     });
     editorToggler?.addEventListener("click", () => {
       const icon = selectDomElement("#open-editors i.fa-angle-right");
