@@ -198,10 +198,12 @@ body {
     &-headerNav {
       background-color: whitesmoke;
       padding: 0.2rem;
+      padding-left: 0.5rem;
       &#open-editors {
         background: #fff;
         padding: 0;
         nav {
+          padding-left: 0.5rem;
           background-color: whitesmoke;
         }
       }
@@ -232,6 +234,17 @@ body {
           li {
             margin-right: 0.2rem;
             cursor: pointer;
+            margin-right: 0.2rem;
+            cursor: pointer;
+            transition: all 0.2s linear;
+            border-radius: 3px;
+            width: 20px;
+            text-align: center;
+            font-size: 1rem;
+
+            &:hover {
+              background-color: $md-grey;
+            }
           }
         }
       }
@@ -449,6 +462,193 @@ body {
         outline: none;
       }
     }
+  }
+}
+.search {
+  min-height: 92vh;
+
+  &__wrapper {
+    border-right: 1px solid $grey;
+    height: 100%;
+    min-width: 230px;
+    max-width: 300px;
+  }
+
+  &__nav {
+    width: 90%;
+    margin: auto;
+    padding: 0.7rem 0;
+    &-group {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      cursor: pointer;
+
+      div {
+        margin-left: 0.5rem;
+        font-weight: 400;
+      }
+    }
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      text-transform: uppercase;
+      font-weight: 500;
+      font-size: 0.9rem;
+      // border: 1px solid;
+      padding: 0.13rem 0;
+      ul {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        list-style: none;
+        width: 43%;
+
+        li {
+          margin-right: 0.2rem;
+          cursor: pointer;
+          transition: all 0.2s linear;
+          border-radius: 3px;
+          width: 20px;
+          text-align: center;
+          font-size: 1rem;
+
+          &:hover {
+            background-color: $md-grey;
+          }
+        }
+      }
+    }
+  }
+
+  &__inputs {
+    width: 100%;
+    &-container {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+    }
+    &-arrow {
+      width: 10%;
+      margin-top: 10%;
+      text-align: center;
+      span {
+        transition: all 0.2s linear;
+        padding: 1rem 0.15rem;
+        cursor: pointer;
+        &:hover {
+          background-color: $md-grey;
+        }
+      }
+    }
+    &-input {
+      width: 90%;
+      .wrapper {
+        display: flex;
+        margin-bottom: 0.5rem;
+        position: relative;
+        height: 2rem;
+        width: 95%;
+        input {
+          &:focus {
+            outline: 1px solid $blue;
+            border: none;
+          }
+        }
+        &.replace {
+          input {
+            width: 85%;
+          }
+
+          .replaceBtn {
+            width: 13%;
+            margin-left: auto;
+
+            div.replace_all {
+              cursor: pointer;
+              text-align: center;
+              transition: all 0.2s linear;
+              border-radius: 3px;
+              margin-bottom: 0.5rem;
+              &:hover {
+                background-color: $md-grey;
+              }
+            }
+            span#toggle__search__details {
+              cursor: pointer;
+              text-align: center;
+              transition: all 0.1s linear;
+              border-radius: 3px;
+              margin-left: 0.2rem;
+              &:hover {
+                background-color: $md-grey;
+              }
+            }
+          }
+        }
+
+        input {
+          width: 100%;
+          height: 100%;
+          &::placeholder {
+            padding-left: 0.22rem;
+            font-size: 0.7rem;
+          }
+        }
+        .matchers {
+          position: absolute;
+          right: 2%;
+          top: 20%;
+
+          span {
+            font-size: 0.8rem;
+            transition: all 0.2s linear;
+            cursor: pointer;
+            padding: 0.1rem;
+            border-radius: 0.2rem;
+            font-weight: 500;
+            &.active {
+              background-color: $blue;
+            }
+            &:hover {
+              background-color: $md-grey;
+            }
+            &:focus {
+              outline: none;
+              border: 1px solid $blue;
+            }
+          }
+        }
+      }
+    }
+    .toggled-inputs {
+      label {
+        font-size: 0.7rem;
+        font-weight: 400;
+        color: $grey;
+      }
+      .container {
+        width: 95%;
+        margin-bottom: 0.3rem;
+      }
+      input {
+        width: 100%;
+        height: 1.7rem;
+        &:focus {
+          outline: 1px solid $blue;
+          border: none;
+        }
+      }
+    }
+  }
+  .message {
+    width: 80%;
+    text-align: left;
+    margin: auto;
+    font-size: 0.7rem;
+    font-weight: 300;
+    margin-top: 1rem;
   }
 }
 

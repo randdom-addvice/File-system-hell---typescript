@@ -36,6 +36,15 @@ import next from "./assets/fileIcons/templates/nextjs.svg";
 import nuxt from "./assets/fileIcons/templates/nuxt.svg";
 import vue from "./assets/fileIcons/templates/vue.svg";
 
+interface FileView {
+  name: string;
+  ext: string;
+  saved: boolean;
+  id: string;
+  remove: (e: MouseEvent) => void;
+  viewFile: () => void;
+}
+
 export function renderIcon(icon: string) {
   switch (icon) {
     case ".json":
@@ -196,13 +205,7 @@ export const FileView2 = (props: {
     </div>
   `;
 };
-export const FileView = (props: {
-  name: string;
-  ext: string;
-  saved: boolean;
-  id: string;
-  fn: () => void;
-}) => {
+export const FileView = (props: FileView) => {
   const wrapper = document.createElement("div");
   const container = document.createElement("div");
   const icon = document.createElement("object");
@@ -211,6 +214,7 @@ export const FileView = (props: {
   wrapper.setAttribute("data-file_view_id", props.id);
   wrapper.classList.add("explorer__view-header-files");
   container.classList.add("explorer__view-header-files-container");
+  container.onclick = props.viewFile;
 
   ["icon", "name", "status", "remove"].forEach((i) => {
     const d = document.createElement("span");
@@ -218,7 +222,7 @@ export const FileView = (props: {
     if (i === "name") d.append(props.name);
     if (i === "status") d.append(props.saved ? "status--visible" : "");
     if (i === "remove") {
-      d.onclick = props.fn;
+      d.onclick = props.remove;
       d.append("x");
     }
     d.classList.add(i);
@@ -228,13 +232,7 @@ export const FileView = (props: {
   return wrapper;
 };
 
-export const OpenEditorFile = (props: {
-  name: string;
-  ext: string;
-  saved: boolean;
-  id: string;
-  fn: () => void;
-}) => {
+export const OpenEditorFile = (props: FileView) => {
   const container = document.createElement("div");
   const wrapper = document.createElement("div");
   const icon = document.createElement("object");
@@ -242,6 +240,7 @@ export const OpenEditorFile = (props: {
   icon.setAttribute("data", "image/svg+xml");
   container.classList.add("explorer__content-editor-container");
   container.setAttribute("data-editor_file_id", props.id);
+  container.onclick = props.viewFile;
   wrapper.classList.add("explorer__content-editor-group");
 
   ["status", "icon", "name"].forEach((i) => {
@@ -250,7 +249,7 @@ export const OpenEditorFile = (props: {
     if (i === "name") d.append(props.name);
     if (i === "status") d.append(props.saved ? "status--visible" : "");
     if (i === "status") {
-      d.onclick = props.fn;
+      d.onclick = props.remove;
       d.append("x");
     }
     d.classList.add(i);

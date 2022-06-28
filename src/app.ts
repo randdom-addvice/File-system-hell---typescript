@@ -67,12 +67,17 @@ class File {
 
     Store.commit("addFileToFileOnView", file);
     Store.commit("setSelectedFile", file);
-    CM.injectFileContent();
+    this.viewFile(file);
     let folder = new Folder();
     if (e.button === 2) {
       state.isFolderSelected = false; //currentTarget.dataset.type === "folder"; //set the "isFolderSelected" property on the Folder class to be used in the "deleteFolderOrFile method"
       folder.showDropDownContext(currentTarget.dataset.file_id!);
     }
+  }
+
+  private viewFile(file: IFile): void {
+    Store.commit("setSelectedFile", file);
+    CM.injectFileContent();
   }
 
   private addFileToFileOnView(id: string, file: IFile): void {
@@ -85,7 +90,11 @@ class File {
         id: file.file_id,
         saved: false,
         ext: file.file_type,
-        fn: () => this.removeFileFromOnView(file.file_id),
+        remove: (e: MouseEvent) => {
+          e.stopPropagation();
+          this.removeFileFromOnView(file.file_id);
+        },
+        viewFile: () => this.viewFile(file),
       })
     );
   }
@@ -100,7 +109,11 @@ class File {
         id: file.file_id,
         saved: false,
         ext: file.file_type,
-        fn: () => this.removeFileFromOnView(file.file_id),
+        remove: (e: MouseEvent) => {
+          e.stopPropagation();
+          this.removeFileFromOnView(file.file_id);
+        },
+        viewFile: () => this.viewFile(file),
       })
     );
   }
@@ -111,6 +124,7 @@ class File {
     const fileInEditor = selectDomElement(`[data-editor_file_id='${id}']`);
     fileOnView?.remove();
     fileInEditor?.remove();
+    CM.removeFileContent();
   }
 
   public addEventListenerToFiles() {
@@ -547,9 +561,8 @@ class Folder {
       this.collapseAllFolders();
     });
     explorerBtn?.addEventListener("click", (e: MouseEvent) => {
-      const container = selectDomElement(".explorer__content");
       if ((e.currentTarget as HTMLElement)?.classList.contains("active")) {
-        container?.classList.toggle("d-none");
+        explorerContainer?.classList.toggle("d-none");
       } else {
         (e.currentTarget as HTMLElement)?.classList.add("active"); //add active class and show content
         searchBtn?.classList.remove("active"); //remove active class from search
@@ -557,14 +570,12 @@ class Folder {
       console.log((e.currentTarget as HTMLElement)?.classList);
     });
     searchBtn?.addEventListener("click", (e: MouseEvent) => {
-      const container = selectDomElement(".explorer__content");
       explorerBtn?.classList.remove("active"); //remove active class from explorer
+      explorerContainer?.classList.add("d-none"); //add display none to explorer
       if ((e.currentTarget as HTMLElement)?.classList.contains("active")) {
-        container?.classList.toggle("d-none");
       } else {
         (e.currentTarget as HTMLElement)?.classList.add("active"); //add active class and show content
       }
-      console.log((e.currentTarget as HTMLElement)?.classList);
     });
   }
 
