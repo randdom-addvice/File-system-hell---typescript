@@ -1,5 +1,6 @@
-import { Folder } from "./app";
+import { File, Folder } from "./app";
 import { BackdropWithSpinner, renderComponent } from "./components";
+import Store from "./store";
 import { selectDomElement } from "./utils";
 
 class App extends Folder {
@@ -7,9 +8,18 @@ class App extends Folder {
     super();
   }
   public init() {
+    const file = new File();
     renderComponent(BackdropWithSpinner(), "app");
     this.handleFolderCreation();
     this.addGlobalEventListener();
+    const filesOnView = Store.getState.filesOnView;
+    if (filesOnView.length) {
+      filesOnView.forEach((i) => {
+        file.addFileToFileOnView("", i);
+        file.viewFile(Store.getState.selectedFile || filesOnView[0]);
+        file.addFileToOpenEditors("", i);
+      });
+    }
     const foldersContainer = selectDomElement(".explorer__content");
     const workSpaceToggler = selectDomElement("#workspace-toggler");
     const editorToggler = selectDomElement("#open-editors-toggler");

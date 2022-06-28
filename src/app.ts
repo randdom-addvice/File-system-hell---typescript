@@ -27,9 +27,11 @@ import {
 import { attachEvent, deleteDomElement, selectDomElement } from "./utils";
 import { AxiosError } from "axios";
 import CodeMirrorManager from "./cm";
+import UseLocalStorage from "./useLocalStorage";
 const req = new API();
 const DND = new DragNDrop();
 const CM = new CodeMirrorManager();
+const LS = UseLocalStorage.getInstance();
 
 interface StateInterface {
   rootDirPath: string;
@@ -75,12 +77,14 @@ class File {
     }
   }
 
-  private viewFile(file: IFile): void {
+  public viewFile(file: IFile): void {
     Store.commit("setSelectedFile", file);
+    LS.setSelectedFile(file);
+    LS.setFilesOnView(Store.getState.filesOnView);
     CM.injectFileContent();
   }
 
-  private addFileToFileOnView(id: string, file: IFile): void {
+  public addFileToFileOnView(id: string, file: IFile): void {
     const container = selectDomElement("#explorer__view-header-group");
     const isExist = Store.getState.filesOnView.find((i) => i.file_id === id);
     if (isExist) return;
@@ -99,7 +103,7 @@ class File {
     );
   }
 
-  private addFileToOpenEditors(id: string, file: IFile): void {
+  public addFileToOpenEditors(id: string, file: IFile): void {
     const container = selectDomElement("#editors-container");
     const isExist = Store.getState.filesOnView.find((i) => i.file_id === id);
     if (isExist) return;

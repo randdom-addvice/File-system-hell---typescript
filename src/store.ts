@@ -1,6 +1,7 @@
 import CreateStore from "vanilla-ts-store";
 
 import { FileState, FolderState, IFile, IFolder } from "./interfaces/interface";
+import UseLocalStorage from "./useLocalStorage";
 interface StoreInterface {
   folders: FolderState; //{someId: {...IFolder}, someId: {...IFolder}} ( [key: string]: IFolder)
   files: FileState;
@@ -10,14 +11,18 @@ interface StoreInterface {
   selectedFile: IFile | null;
 }
 
+const LS = UseLocalStorage.getInstance();
+
+// const LS = UseLocalStorage();
+
 const Store = new CreateStore<StoreInterface>({
   state: {
     currentIdTarget: "null",
     isFolderSelected: null,
     folders: {},
     files: {},
-    filesOnView: [],
-    selectedFile: null,
+    filesOnView: LS.getFilesOnView(),
+    selectedFile: LS.getSelectedFile(),
   },
   mutations: {
     setFolders(state, params) {

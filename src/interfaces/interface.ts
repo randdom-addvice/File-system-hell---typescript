@@ -1,7 +1,7 @@
 import { AxiosResponse } from "axios";
 
 interface IObjectKeys {
-  [key: string]: string | number | undefined;
+  [key: string]: any;
 }
 
 export interface FolderState {
@@ -25,6 +25,13 @@ export interface IFile {
   file_type: string;
   file_name: string;
   file_content: any;
+}
+
+export interface Storage extends IObjectKeys {
+  currentFileView: IFile;
+  searchHistory: string[];
+  filesOnView: IFile[];
+  searchKeyWord: string;
 }
 
 export interface FolderClass {

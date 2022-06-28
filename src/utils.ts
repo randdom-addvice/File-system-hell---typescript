@@ -1,3 +1,5 @@
+import { IFile, Storage } from "./interfaces/interface";
+
 export const deleteDomElement = (element: string) => {
   const el = document.getElementById(element);
   console.log(el);
