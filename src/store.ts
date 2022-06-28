@@ -7,6 +7,7 @@ interface StoreInterface {
   currentIdTarget: string | null;
   isFolderSelected: boolean | null;
   filesOnView: IFile[];
+  selectedFile: IFile | null;
 }
 
 const Store = new CreateStore<StoreInterface>({
@@ -16,6 +17,7 @@ const Store = new CreateStore<StoreInterface>({
     folders: {},
     files: {},
     filesOnView: [],
+    selectedFile: null,
   },
   mutations: {
     setFolders(state, params) {
@@ -52,6 +54,9 @@ const Store = new CreateStore<StoreInterface>({
     removeFileFromView(state, id) {
       let newState = state.filesOnView.filter((i) => i.file_id !== id);
       state.filesOnView = newState;
+    },
+    setSelectedFile(state, file) {
+      state.selectedFile = file;
     },
   },
 });

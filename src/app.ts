@@ -26,8 +26,10 @@ import {
 } from "./components";
 import { attachEvent, deleteDomElement, selectDomElement } from "./utils";
 import { AxiosError } from "axios";
+import CodeMirrorManager from "./cm";
 const req = new API();
-let DND = new DragNDrop();
+const DND = new DragNDrop();
+const CM = new CodeMirrorManager();
 
 interface StateInterface {
   rootDirPath: string;
@@ -58,18 +60,14 @@ class File {
     const currentTarget = e.currentTarget as HTMLElement;
     state.isFolderSelected = currentTarget.dataset.type === "folder";
     state.currentIdTarget = currentTarget.dataset.file_id!;
-    this.addFileToFileOnView(
-      state.currentIdTarget,
-      Store.getState.files[state.currentIdTarget]
-    );
-    this.addFileToOpenEditors(
-      state.currentIdTarget,
-      Store.getState.files[state.currentIdTarget]
-    );
-    Store.commit(
-      "addFileToFileOnView",
-      Store.getState.files[state.currentIdTarget]
-    );
+    const file = Store.getState.files[state.currentIdTarget];
+    if (!file) return;
+    this.addFileToFileOnView(state.currentIdTarget, file);
+    this.addFileToOpenEditors(state.currentIdTarget, file);
+
+    Store.commit("addFileToFileOnView", file);
+    Store.commit("setSelectedFile", file);
+    CM.injectFileContent();
     let folder = new Folder();
     if (e.button === 2) {
       state.isFolderSelected = false; //currentTarget.dataset.type === "folder"; //set the "isFolderSelected" property on the Folder class to be used in the "deleteFolderOrFile method"
@@ -506,6 +504,8 @@ class Folder {
   protected addGlobalEventListener() {
     const addFileBtn = selectDomElement("#add__file") as HTMLElement;
     const addFolderBtn = selectDomElement("#add__folder") as HTMLElement;
+    const explorerBtn = selectDomElement("#explorer__icon-file") as HTMLElement;
+    const searchBtn = selectDomElement("#explorer__icon-search") as HTMLElement;
     let trashZone = selectDomElement("#trash__zone");
     const collapseFoldersBtn = selectDomElement(
       "#collapse__folders"
@@ -545,6 +545,26 @@ class Folder {
       );
       arrowIcons.forEach((i) => i.classList.remove("fa-rotate-90"));
       this.collapseAllFolders();
+    });
+    explorerBtn?.addEventListener("click", (e: MouseEvent) => {
+      const container = selectDomElement(".explorer__content");
+      if ((e.currentTarget as HTMLElement)?.classList.contains("active")) {
+        container?.classList.toggle("d-none");
+      } else {
+        (e.currentTarget as HTMLElement)?.classList.add("active"); //add active class and show content
+        searchBtn?.classList.remove("active"); //remove active class from search
+      }
+      console.log((e.currentTarget as HTMLElement)?.classList);
+    });
+    searchBtn?.addEventListener("click", (e: MouseEvent) => {
+      const container = selectDomElement(".explorer__content");
+      explorerBtn?.classList.remove("active"); //remove active class from explorer
+      if ((e.currentTarget as HTMLElement)?.classList.contains("active")) {
+        container?.classList.toggle("d-none");
+      } else {
+        (e.currentTarget as HTMLElement)?.classList.add("active"); //add active class and show content
+      }
+      console.log((e.currentTarget as HTMLElement)?.classList);
     });
   }
 

@@ -1,4 +1,5 @@
 declare module "*.svg" {
   export default "" as string;
 }
-declare module "dragonbinder";
+declare module "codemirror";
+declare module "codemirror/lib/codemirror.js";

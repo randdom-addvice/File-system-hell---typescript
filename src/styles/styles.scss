@@ -57,11 +57,18 @@ body {
       flex-direction: column;
       justify-content: center;
       align-items: center;
-
+      & > div.active {
+        border-left: 2px solid;
+      }
       & > div {
-        width: 50%;
+        width: 100%;
         margin-bottom: 2rem;
         cursor: pointer;
+
+        .container {
+          width: 50%;
+          margin: auto;
+        }
 
         i {
           font-size: 2rem;
@@ -92,6 +99,9 @@ body {
       &--collapsed {
         overflow-y: hidden;
         height: 0;
+      }
+      &-container {
+        padding: 0.2rem 0;
       }
       &-group {
         display: flex;
@@ -188,6 +198,13 @@ body {
     &-headerNav {
       background-color: whitesmoke;
       padding: 0.2rem;
+      &#open-editors {
+        background: #fff;
+        padding: 0;
+        nav {
+          background-color: whitesmoke;
+        }
+      }
       &-group {
         display: flex;
         justify-content: space-between;
@@ -248,6 +265,9 @@ body {
       }
       &-arrow {
         margin-right: 0.5rem;
+      }
+      &-name {
+        font-size: 0.8rem;
       }
       // 22603624898
       &-icon {
@@ -345,7 +365,7 @@ body {
   &__view {
     width: 100%;
     &-container {
-      display: flex;
+      // display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
@@ -445,4 +465,17 @@ body {
 .v-hidden {
   visibility: hidden !important;
 }
-//call this 012787000.
+span.name {
+  font-size: 0.8rem;
+}
+//CodeMirror
+#file__content {
+  border-top: 1px solid;
+}
+.CodeMirror {
+  min-height: 100vh !important;
+}
+.CodeMirror-line {
+  padding-top: 0.1rem !important;
+  padding-bottom: 0.1rem !important;
+}

@@ -18,6 +18,8 @@
     "css-loader": "^6.7.1",
     "html-loader": "^3.1.0",
     "html-webpack-plugin": "^5.5.0",
+    "postcss-loader": "^7.0.0",
+    "postcss-plugin": "^1.0.0",
     "sass": "^1.52.1",
     "sass-loader": "^13.0.0",
     "style-loader": "^3.3.1",
@@ -29,10 +31,20 @@
     "webpack-dev-server": "^4.9.0"
   },
   "dependencies": {
+    "@codemirror/commands": "^6.0.0",
+    "@codemirror/lang-javascript": "^6.0.0",
+    "@codemirror/language": "^6.1.0",
+    "@codemirror/state": "^6.0.1",
+    "@codemirror/view": "^6.0.2",
     "axios": "^0.27.2",
-    "dragonbinder": "^2.2.0",
+    "codemirror": "^5.57.0",
     "immutable": "^4.1.0",
     "shortid": "^2.2.16",
     "vanilla-ts-store": "^2.4.0"
+  },
+  "postcss": {
+    "plugins": {
+      "postcss-plugin": {}
+    }
   }
 }
