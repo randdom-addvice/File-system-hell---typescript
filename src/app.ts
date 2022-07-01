@@ -20,6 +20,7 @@ import {
   OpenEditorFile,
   renderComponent,
   renderIcon,
+  SearchResult,
   TextField,
   TextFieldErrorMessage,
   unmountComponent,
@@ -51,34 +52,6 @@ const state: StateInterface = {
   workspaceName: "Work space",
 };
 
-class SearchService {
-  private searchValue: string = "";
-  private replaceValue: string = "";
-
-  refresh(): void {
-    console.log("refresh clicked");
-  }
-
-  clearSearch(): void {
-    console.log("clear search clicked");
-  }
-
-  openNewSearchEditor(): void {
-    console.log("open new search editor clicked");
-  }
-
-  collapseAll(): void {
-    console.log("collapse all clicked");
-  }
-
-  onSearchKeyUp(event: KeyboardEvent): void {
-    console.log(event);
-  }
-
-  onReplaceKeyUp(event: KeyboardEvent): void {
-    console.log(event);
-  }
-}
 class File {
   constructor() {
     this.checkForFilesInDirectories =
@@ -551,6 +524,7 @@ class Folder {
   }
 
   protected addGlobalEventListener() {
+    const searchService = new SearchService();
     const addFileBtn = selectDomElement("#add__file");
     const addFolderBtn = selectDomElement("#add__folder");
     const explorerBtn = selectDomElement("#explorer__icon-file");
@@ -614,6 +588,7 @@ class Folder {
         explorerBtn?.classList.remove("active");
       }
     });
+    searchService.addListeners();
   }
 
   /**
@@ -720,6 +695,305 @@ class Folder {
     workspaceNameContainer.textContent = state.workspaceName;
 
     workSpaceNavBtnContainer?.classList.add("d-none");
+  }
+}
+
+class SearchService extends File {
+  private readonly noResultMsg: string =
+    "No results found. Review your match cases and check your keywords";
+  private readonly errorMsg: string = " Invalid regular expression";
+  private searchValue: string = "";
+  private replaceValue: string = "";
+  private filesToInclude: string = "";
+  private filesToExclude: string = "";
+  private matchCase: boolean = false;
+  private matchWholeWord: boolean = false;
+  private useRegex: boolean = false;
+  private matchedFiles: IFile[] = [];
+  private readonly navButtons: (HTMLElement | null)[] = [
+    selectDomElement("#refresh__search"),
+    selectDomElement("#clear__search"),
+    selectDomElement("#collapse__search__results"),
+  ];
+  private readonly messageContainer: HTMLElement = selectDomElement(
+    "#message"
+  ) as HTMLElement;
+
+  public constructor() {
+    super();
+    let methods = Object.getOwnPropertyNames(Object.getPrototypeOf(this));
+    //bind all methods
+    methods
+      .filter((method) => method !== "constructor")
+      .forEach((method: string) => {
+        let _this: { [key: string]: any } = this;
+        _this[method] = _this[method].bind(this);
+      });
+  }
+
+  private searchFiles(): void {
+    const searchResultContainer = selectDomElement(
+      "#search-result-container"
+    ) as HTMLElement;
+    searchResultContainer.innerHTML = "";
+    const { files } = Store.getState;
+    const ignoreCase = Object.values(files)
+      .map((i) => i.file_content)
+      .filter((x) => x.toLowerCase().includes(this.searchValue.toLowerCase())); //if no nav button is clicked ^
+    // const caseSensitive = Object.values(files)
+    //   .map((i) => i.file_content)
+    //   .filter((x) => x.includes(this.searchValue))
+    //   .filter((i) => i !== ""); //if (Aa is clicked) ^
+
+    const caseSensitive = Object.values(files)
+      .map((i) => i.file_content)
+      .map((x) => {
+        if (this.searchValue.length === 0) return;
+        return !this.matchCase
+          ? x.toLowerCase().indexOf(this.searchValue.toLowerCase())
+          : x.indexOf(this.searchValue);
+      });
+
+    // console.log(ignoreCase, "ignoreCase");
+    // console.log(caseSensitive, "caseSensitive");
+    // console.log(
+    //   Object.values(files)
+    //     .map((i) => i.file_content)
+    //     .map((x) => {
+    //       return !this.matchCase
+    //         ? x.toLowerCase().indexOf(this.searchValue.toLowerCase())
+    //         : x.indexOf(this.searchValue);
+    //     }), //if no nav button is clicked
+    //   "NO match whole word"
+    // );
+    const matchWholeWord = Object.values(files)
+      .map((i) => i.file_content)
+      .map((i) => {
+        let value = this.matchCase
+          ? this.searchValue
+          : this.searchValue.toLowerCase();
+        if (value.length === 0) return;
+        // function escapeRegExp(string: string) {
+        //   return string.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+        // }
+        // let regex = "\\b";
+        // regex += escapeRegExp(i);
+        // regex += "\\b";
+        function isMatch(searchOnString: string, searchText: string) {
+          searchText = searchText.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+          return (
+            searchOnString.match(new RegExp("\\b" + searchText + "\\b")) != null
+          );
+        }
+        return isMatch(i.replace(/["']/g, ""), value);
+        // let regex = new RegExp("\\b(" + value + ")\\b");
+        // return i.match(regex) === null;
+      }); //returns true if no match // if (ab is clicked) ^
+    // console.log(matchWholeWord, "matchWholeWord");
+    // console.log(Object.values(files));
+    // console.log(
+    //   Object.values(files).findIndex((i) => i.file_content === caseSensitive[0])
+    // );
+    // console.log(this.matchCase, this.matchWholeWord, this.useRegex);
+
+    if (this.matchWholeWord) {
+      // const matchedFiles = matchWholeWord
+      //   .filter((i) => i === true)
+      //   .map(
+      //     (i) => Object.values(files)[matchWholeWord.findIndex((x) => x === i)]
+      //   );
+      let matchedFiles = matchWholeWord
+        .map((i, index) => {
+          if (i === true) return Object.values(files)[index];
+        })
+        .filter((i) => i !== undefined) as IFile[] | [];
+      this.matchedFiles = matchedFiles;
+    } else {
+      const indexes = caseSensitive.filter((i) => i !== -1 && i !== undefined);
+      const matchedFiles = indexes.map((index) => {
+        const foundIndex = caseSensitive.findIndex((i) => i === index);
+        return Object.values(files)[foundIndex];
+      });
+      this.matchedFiles = matchedFiles;
+    }
+    if (this.useRegex) {
+      try {
+        const regex = Object.values(files)
+          .map((i) => i.file_content)
+          .filter((x) => x.search(this.searchValue))
+          .filter((i) => i !== ""); //if (* is clicked)
+        this.matchedFiles = regex;
+      } catch (error) {
+        this.messageContainer.textContent = this.errorMsg;
+        return;
+      }
+    }
+    const message: string = this.matchedFiles.length ? "" : this.noResultMsg;
+    const matchedLines: { file: IFile; lines: string[] }[] = [];
+    this.messageContainer.textContent = message;
+    this.matchedFiles.forEach((i, index, array) => {
+      const lines = i.file_content.split("\n");
+      let t: string[] = [];
+      lines.forEach((x: string) => {
+        if (x.includes(this.searchValue)) t.push(x);
+      });
+      matchedLines.push({ file: array[index], lines: t });
+    });
+    matchedLines.forEach((i) => {
+      searchResultContainer.appendChild(
+        SearchResult({
+          ext: i.file.file_type,
+          name: i.file.file_name,
+          count: i.lines.length,
+          searchText: this.searchValue,
+          searchResult: i.lines,
+          id: i.file.file_id,
+          handleClick: (e: MouseEvent): void => {
+            const currentTarget = e.currentTarget as HTMLElement;
+            const children = Array.from(currentTarget.children).filter((x) =>
+              x.classList.contains("search__result-text")
+            );
+            let fileIcon = selectDomElement(
+              `[data-search_id='${i.file.file_id}'] .search__result-arrow i`
+            ) as HTMLElement;
+            fileIcon?.classList.toggle("fa-rotate-90");
+            children.forEach((child) => {
+              child.classList.toggle("search__result-text--hide");
+            });
+          },
+          handleDelete: (e: MouseEvent) => {
+            e.stopPropagation();
+            selectDomElement(`[data-search_id='${i.file.file_id}']`)?.remove();
+            console.log("deleted", i.file.file_id);
+          },
+          handleResultDelete: (e: MouseEvent) => {
+            e.stopPropagation();
+            selectDomElement(
+              `[data-search_result_id='${i.file.file_id}']`
+            )?.remove();
+            console.log("deleted", i.file.file_id);
+          },
+          viewFile: (e: MouseEvent) => {
+            e.stopPropagation();
+            this.viewFile(i.file);
+          },
+        })
+      );
+    });
+    console.log(matchedLines);
+  }
+
+  // Listeners
+  private refresh(): void {
+    console.log("refresh clicked");
+  }
+
+  private clearSearch(): void {
+    console.log("clear search clicked");
+  }
+
+  private openNewSearchEditor(): void {
+    console.log("open new search editor clicked");
+  }
+
+  private collapseAll(): void {
+    console.log("collapse all clicked");
+  }
+
+  private onSearchKeyUp(event: KeyboardEvent): void {
+    this.searchValue = (event.target as HTMLInputElement).value;
+    this.navButtons.forEach(
+      (i) =>
+        ((i as HTMLButtonElement).disabled =
+          this.searchValue.length > 0 ? false : true)
+    ); //disable or enable nav buttons based on serahkeyword length
+
+    this.searchFiles();
+  }
+
+  private onReplaceKeyUp(event: KeyboardEvent): void {
+    console.log("onReplaceKeyUp", event);
+  }
+
+  private onFilesToIncludeChange(event: KeyboardEvent): void {
+    console.log("onFilesToIncludeChange", event);
+  }
+
+  private onFilesToExcludeChange(event: KeyboardEvent): void {
+    console.log("onFilesToExcludeChange", event);
+  }
+
+  private matchCaseOnSearch(): void {
+    const matchCaseBtn = selectDomElement("#match__case");
+    const searchInput = selectDomElement("#search__input");
+    this.matchCase = !this.matchCase;
+    matchCaseBtn?.classList.toggle("--active");
+    searchInput?.focus();
+  }
+
+  private matchWholeWordOnSearch(): void {
+    const matchWholeWordBtn = selectDomElement("#match__whole__word");
+    const searchInput = selectDomElement("#search__input");
+    this.matchWholeWord = !this.matchWholeWord;
+    matchWholeWordBtn?.classList.toggle("--active");
+    searchInput?.focus();
+    console.log("match whole word clicked");
+  }
+
+  private useRegularExpressionOnSearch(): void {
+    const matchRegexBtn = selectDomElement("#regex");
+    const searchInput = selectDomElement("#search__input");
+    this.useRegex = !this.useRegex;
+    matchRegexBtn?.classList.toggle("--active");
+    searchInput?.focus();
+    console.log("use regular expression on search clicked");
+  }
+
+  private replaceAll(): void {
+    console.log("replace all clicked");
+  }
+
+  private toggleSearchDetail(): void {
+    console.log("toggle search detail clicked");
+  }
+
+  private toggleReplace(): void {
+    console.log("toggle replace clicked");
+  }
+
+  private toggleArrow(): void {
+    console.log("toggle arrow clicked");
+  }
+
+  public addListeners(): void {
+    const refreshSearch = selectDomElement("#refresh__search");
+    const clearSearch = selectDomElement("#clear__search");
+    const openSearchEditor = selectDomElement("#open__search__editor");
+    const collapseSearchResults = selectDomElement(
+      "#collapse__search__results"
+    );
+    const searchInputArrow = selectDomElement("#search__inputs__arrow");
+    const searchInput = selectDomElement("#search__input");
+    const replaceInput = selectDomElement("#replace__input");
+    const matchCaseBtn = selectDomElement("#match__case");
+    const matchWholeWordBtn = selectDomElement("#match__whole__word");
+    const matchRegexBtn = selectDomElement("#regex");
+    const replaceAllBtn = selectDomElement("#replace__all");
+    const toggleSearchDetailsBtn = selectDomElement("#toggle__search__details");
+    const filesToIncludeInput = selectDomElement("to__include");
+    const filesToExcludeInput = selectDomElement("to__exclude");
+
+    refreshSearch?.addEventListener("click", this.refresh);
+    clearSearch?.addEventListener("click", this.clearSearch);
+    openSearchEditor?.addEventListener("click", this.openNewSearchEditor);
+    collapseSearchResults?.addEventListener("click", this.collapseAll);
+    searchInputArrow?.addEventListener("click", this.toggleArrow);
+    searchInput?.addEventListener("keyup", this.onSearchKeyUp);
+    replaceInput?.addEventListener("keyup", this.onReplaceKeyUp);
+    matchCaseBtn?.addEventListener("click", this.matchCaseOnSearch);
+    matchWholeWordBtn?.addEventListener("click", this.matchWholeWordOnSearch);
+    matchRegexBtn?.addEventListener("click", this.useRegularExpressionOnSearch);
+    replaceAllBtn?.addEventListener("click", this.useRegularExpressionOnSearch);
   }
 }
 

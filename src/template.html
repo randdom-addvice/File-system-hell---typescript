@@ -104,20 +104,20 @@
                                 <nav>
                                     <div class="search__nav-group">
                                         <div>search</div>
-                                        <ul>
-                                            <li id="refresh__search" title="Refresh">
+                                        <div class="group">
+                                            <button id="refresh__search" title="Refresh" disabled>
                                                 <span><i class="fa-solid fa-rotate-right"></i></span>
-                                            </li>
-                                            <li id="clear__search" title="Clear Search Results">
+                                            </button>
+                                            <button id="clear__search" title="Clear Search Results" disabled>
                                                 <span><i class="fa-solid fa-x"></i></span>
-                                            </li>
-                                            <li id="open_-search-editor" title="Open new search editor">
+                                            </button>
+                                            <button id="open__search__editor" title="Open new search editor">
                                                 <span><i class="fa-solid fa-folder-plus"></i></span>
-                                            </li>
-                                            <li id="collapse__search_results" title="Collapse all">
+                                            </button>
+                                            <button id="collapse__search__results" title="Collapse all" disabled>
                                                 <span><i class="fa-solid fa-folder-open"></i></span>
-                                            </li>
-                                        </ul>
+                                            </button>
+                                        </div>
                                     </div>
                                 </nav>
                             </div>
@@ -125,13 +125,13 @@
                                 <div class="search__inputs-container">
                                     <!--flex  -->
                                     <div class="search__inputs-arrow">
-                                        <span>
+                                        <span id="search__inputs__arrow">
                                             <i class="fa-solid fa-angle-right"></i>
                                         </span>
                                     </div>
                                     <div class="search__inputs-input">
                                         <div class="wrapper">
-                                            <input type="text" name="search"
+                                            <input type="text" name="search" id="search__input"
                                                 placeholder="Search (&#8593 &#8595 for history)">
                                             <div class="matchers">
                                                 <span id="match__case" title="Match case">Aa</span>
@@ -140,9 +140,9 @@
                                             </div>
                                         </div>
                                         <div class="wrapper replace">
-                                            <input type="text" name="replace" placeholder="Replace">
+                                            <input type="text" name="replace" id="replace__input" placeholder="Replace">
                                             <div class="replaceBtn">
-                                                <div class="replace_all" id="replace__all">
+                                                <div class="replace_all" id="replace__all" title="Replace All">
                                                     <span><i class="fa-solid fa-arrows-turn-to-dots"></i></span>
                                                 </div>
                                                 <span id="toggle__search__details" title="Toggle Search Details"><i
@@ -163,9 +163,13 @@
                                 </div>
                             </div>
                             <p class="message" id="message">
-                                No results found. Review your match cases and check your keywords
+
                             </p>
-                            <div class="search__content-container" id="search-results-container"></div>
+                            <div class="search__result">
+                                <div class="search__result-container" id="search-result-container">
+
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>

@@ -205,6 +205,7 @@ export const FileView2 = (props: {
     </div>
   `;
 };
+
 export const FileView = (props: FileView) => {
   const wrapper = document.createElement("div");
   const container = document.createElement("div");
@@ -230,6 +231,97 @@ export const FileView = (props: FileView) => {
     wrapper.append(container);
   });
   return wrapper;
+};
+
+export const SearchResult = (props: {
+  ext: string;
+  name: string;
+  count: number;
+  searchText: string;
+  id: string;
+  searchResult: string[];
+  handleClick: (e: MouseEvent) => void;
+  handleDelete: (e: MouseEvent) => void;
+  handleResultDelete: (e: MouseEvent) => void;
+  viewFile: (e: MouseEvent) => void;
+}) => {
+  const wrapper = document.createElement("div");
+  const group = document.createElement("div");
+  const name = document.createElement("span");
+  const arrow = document.createElement("span");
+  const count = document.createElement("span");
+  const ext = document.createElement("span");
+  const icon = document.createElement("i");
+  const groupItem = document.createElement("div");
+  const groupItem2 = document.createElement("div");
+  const result = document.createElement("div");
+
+  Object.assign(wrapper, {
+    className: "search__result-wrapper",
+    onclick: props.handleClick,
+  });
+  Object.assign(count, {
+    className: "search__result-count",
+    onclick: props.handleDelete,
+  });
+  wrapper.setAttribute("data-search_id", props.id);
+  name.textContent = props.name;
+  group.classList.add("search__result-group");
+  arrow.classList.add("search__result-arrow");
+  icon.classList.add(...["fa-solid", "fa-angle-right", "fa-rotate-90"]);
+  name.classList.add("search__result-name");
+  ext.classList.add("search__result-icon");
+  result.classList.add("search__result-text");
+
+  count.textContent = props.count.toString();
+  ext.innerHTML = renderIcon(props.ext);
+  arrow.appendChild(icon);
+  groupItem.appendChild(arrow);
+  groupItem.appendChild(ext);
+  groupItem.appendChild(name);
+  groupItem2.appendChild(count);
+  group.appendChild(groupItem);
+  group.appendChild(groupItem2);
+  wrapper.appendChild(group);
+
+  props.searchResult.forEach((i) => {
+    if (i.length > 35) i = `${i.substring(0, 25)}...`;
+    let newText = i.replace(
+      props.searchText,
+      `<span>${props.searchText}</span>`
+    );
+    const container = document.createElement("div");
+    const el = document.createElement("p");
+    const x = document.createElement("span");
+    Object.assign(x, {
+      className: "remove",
+      onclick: props.handleResultDelete,
+      textContent: "x",
+    });
+    // x.textContent = "x";
+    el.innerHTML = newText;
+    container.appendChild(el);
+    container.appendChild(x);
+    container.setAttribute("data-search_result_id", props.id);
+    container.onclick = props.viewFile;
+    result.appendChild(container);
+  });
+  wrapper.appendChild(result);
+
+  return wrapper;
+
+  // return `
+  //     <div class="search__result-wrapper">
+  //         <div class="search__result-group">
+  //             <span id="search__result-arrow">
+  //                 <i class="fa-solid fa-angle-right"></i>
+  //             </span>
+  //             <span class="search__result-name">${props.name}</span>
+  //             <span class="search__result-count">${props.count}</span>
+  //         </div>
+  //         <div class="search__result-text nested">search text</div>
+  //     </div>
+  // `;
 };
 
 export const OpenEditorFile = (props: FileView) => {
@@ -328,7 +420,7 @@ export const BackdropWithSpinner = () => {
         z-index: 9998;
         align-items: center;
         justify-content: center;
-        backdrop-filter: blur(1px)
+        backdrop-filter: blur(2px)
         }
 
         .loading-overlay.is-active {

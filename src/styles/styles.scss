@@ -498,24 +498,30 @@ body {
       font-size: 0.9rem;
       // border: 1px solid;
       padding: 0.13rem 0;
-      ul {
+      div.group {
         display: flex;
         justify-content: space-between;
         align-items: center;
         list-style: none;
         width: 43%;
 
-        li {
+        button {
           margin-right: 0.2rem;
           cursor: pointer;
           transition: all 0.2s linear;
           border-radius: 3px;
-          width: 20px;
+          width: 23px;
           text-align: center;
           font-size: 1rem;
+          background: transparent;
+          border: none;
 
           &:hover {
             background-color: $md-grey;
+          }
+          &:disabled {
+            cursor: default;
+            background-color: transparent;
           }
         }
       }
@@ -608,7 +614,7 @@ body {
             padding: 0.1rem;
             border-radius: 0.2rem;
             font-weight: 500;
-            &.active {
+            &.--active {
               background-color: $blue;
             }
             &:hover {
@@ -642,6 +648,118 @@ body {
       }
     }
   }
+  &__result {
+    &-wrapper {
+      margin-bottom: 0.3rem;
+      transition: all 0.05s linear;
+      &:hover {
+        background-color: $md-grey;
+
+        .search__result-count {
+          &:before {
+            visibility: visible;
+          }
+        }
+      }
+    }
+    &-container {
+      margin: auto;
+    }
+    span {
+      margin-right: 0.5rem;
+    }
+    &-group {
+      display: grid;
+      grid-template-columns: 10fr 2fr;
+      align-items: center;
+      text-align: right;
+      cursor: pointer;
+      width: 90%;
+      margin: auto;
+
+      & > div {
+        display: flex;
+        width: 100%;
+        &:nth-of-type(2) {
+          justify-content: center;
+        }
+      }
+    }
+    &-icon {
+      width: 1rem;
+      height: 1rem;
+    }
+    &-name {
+      font-size: 0.8rem;
+    }
+    &-count {
+      font-size: 0.8rem;
+      margin-right: 0 !important;
+      text-align: right;
+      border-radius: 0.5rem;
+      position: relative;
+
+      &::before {
+        content: "x";
+        position: absolute;
+        background-color: $dark-grey;
+        color: $white;
+        cursor: pointer;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        left: 0;
+        border-radius: 50%;
+        text-align: center;
+        width: 15px;
+        height: 15px;
+        visibility: hidden;
+        // width: fit-content;
+      }
+    }
+    &-text {
+      font-size: 0.7rem;
+      // margin-left: 2rem;
+      background-color: #fff;
+      cursor: pointer;
+      margin-top: 0.1rem;
+      div {
+        padding: 0.2rem 0;
+        display: grid;
+        grid-template-columns: 12fr 2fr;
+        &:hover {
+          background-color: $info;
+          span.remove {
+            visibility: visible;
+          }
+        }
+        p {
+          margin-left: 2rem;
+          line-height: 1;
+          span {
+            margin: 0;
+            background-color: $dark-grey;
+          }
+        }
+        span.remove {
+          font-size: 0.8rem;
+          border-radius: 3px;
+          width: 18px;
+          text-align: center;
+          background: transparent;
+          border: none;
+          visibility: hidden;
+
+          &:hover {
+            background-color: $md-grey;
+          }
+        }
+      }
+      &--hide {
+        display: none;
+      }
+    }
+  }
   .message {
     width: 80%;
     text-align: left;
@@ -649,6 +767,7 @@ body {
     font-size: 0.7rem;
     font-weight: 300;
     margin-top: 1rem;
+    color: $danger;
   }
 }
 
