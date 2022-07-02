@@ -753,15 +753,26 @@ class SearchService extends File {
   private searchFiles(): void {
     this.searchResultContainer.innerHTML = "";
     const { files } = Store.getState;
-    const ignoreCase = Object.values(files)
-      .map((i) => i.file_content)
-      .filter((x) => x.toLowerCase().includes(this.searchValue.toLowerCase())); //if no nav button is clicked ^
-    // const caseSensitive = Object.values(files)
-    //   .map((i) => i.file_content)
-    //   .filter((x) => x.includes(this.searchValue))
-    //   .filter((i) => i !== ""); //if (Aa is clicked) ^
-
-    const caseSensitive = Object.values(files)
+    const includedFiles = Object.values(files)
+      .filter((i) => {
+        const byExtension = this.filesToInclude.charAt(0) === ".";
+        return byExtension
+          ? i.file_type === this.filesToInclude
+          : i.file_name === this.filesToInclude ||
+              i.file_dir
+                .toLowerCase()
+                .includes(this.filesToInclude.toLowerCase());
+      })
+      .filter((i) => {
+        const byExtension = this.filesToExclude.charAt(0) === ".";
+        return byExtension
+          ? i.file_type !== this.filesToExclude
+          : i.file_name !== this.filesToExclude ||
+              !i.file_dir
+                .toLowerCase()
+                .includes(this.filesToExclude.toLowerCase());
+      });
+    const caseSensitive = includedFiles
       .map((i) => i.file_content)
       .map((x) => {
         if (this.searchValue.length === 0) return;
@@ -769,32 +780,13 @@ class SearchService extends File {
           ? x.toLowerCase().indexOf(this.searchValue.toLowerCase())
           : x.indexOf(this.searchValue);
       });
-
-    // console.log(ignoreCase, "ignoreCase");
-    // console.log(caseSensitive, "caseSensitive");
-    // console.log(
-    //   Object.values(files)
-    //     .map((i) => i.file_content)
-    //     .map((x) => {
-    //       return !this.matchCase
-    //         ? x.toLowerCase().indexOf(this.searchValue.toLowerCase())
-    //         : x.indexOf(this.searchValue);
-    //     }), //if no nav button is clicked
-    //   "NO match whole word"
-    // );
-    const matchWholeWord = Object.values(files)
+    const matchWholeWord = includedFiles
       .map((i) => i.file_content)
       .map((i) => {
         let value = this.matchCase
           ? this.searchValue
           : this.searchValue.toLowerCase();
         if (value.length === 0) return;
-        // function escapeRegExp(string: string) {
-        //   return string.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
-        // }
-        // let regex = "\\b";
-        // regex += escapeRegExp(i);
-        // regex += "\\b";
         function isMatch(searchOnString: string, searchText: string) {
           searchText = searchText.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
           return (
@@ -802,22 +794,8 @@ class SearchService extends File {
           );
         }
         return isMatch(i.replace(/["']/g, ""), value);
-        // let regex = new RegExp("\\b(" + value + ")\\b");
-        // return i.match(regex) === null;
       }); //returns true if no match // if (ab is clicked) ^
-    // console.log(matchWholeWord, "matchWholeWord");
-    // console.log(Object.values(files));
-    // console.log(
-    //   Object.values(files).findIndex((i) => i.file_content === caseSensitive[0])
-    // );
-    // console.log(this.matchCase, this.matchWholeWord, this.useRegex);
-
     if (this.matchWholeWord) {
-      // const matchedFiles = matchWholeWord
-      //   .filter((i) => i === true)
-      //   .map(
-      //     (i) => Object.values(files)[matchWholeWord.findIndex((x) => x === i)]
-      //   );
       let matchedFiles = matchWholeWord
         .map((i, index) => {
           if (i === true) return Object.values(files)[index];
@@ -828,13 +806,13 @@ class SearchService extends File {
       const indexes = caseSensitive.filter((i) => i !== -1 && i !== undefined);
       const matchedFiles = indexes.map((index) => {
         const foundIndex = caseSensitive.findIndex((i) => i === index);
-        return Object.values(files)[foundIndex];
+        return includedFiles[foundIndex];
       });
       this.matchedFiles = matchedFiles;
     }
     if (this.useRegex) {
       try {
-        const regex = Object.values(files)
+        const regex = includedFiles
           .map((i) => i.file_content)
           .filter((x) => x.search(this.searchValue))
           .filter((i) => i !== ""); //if (* is clicked)
@@ -969,16 +947,6 @@ class SearchService extends File {
     if (this.searchValue) LS.setSearchHistory(this.searchValue);
   }
 
-  private onFilesToIncludeChange(event: KeyboardEvent): void {
-    console.log("onFilesToIncludeChange", event);
-    this.filesToInclude = (event.target as HTMLInputElement).value;
-  }
-
-  private onFilesToExcludeChange(event: KeyboardEvent): void {
-    console.log("onFilesToExcludeChange", event);
-    this.filesToExclude = (event.target as HTMLInputElement).value;
-  }
-
   private matchCaseOnSearch(): void {
     const matchCaseBtn = selectDomElement("#match__case");
     const searchInput = selectDomElement("#search__input");
@@ -1079,8 +1047,12 @@ class SearchService extends File {
       "click",
       this.toggleFilesToInclude
     );
-    filesToIncludeInput?.addEventListener("keyup", this.onFilesToIncludeChange);
-    filesToExcludeInput?.addEventListener("keyup", this.onFilesToExcludeChange);
+    filesToIncludeInput?.addEventListener("change", (event: Event) => {
+      this.filesToInclude = (event.target as HTMLInputElement).value;
+    });
+    filesToExcludeInput?.addEventListener("change", (event: Event) => {
+      this.filesToExclude = (event.target as HTMLInputElement).value;
+    });
   }
 }
 
