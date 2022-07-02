@@ -60,19 +60,23 @@ export default class UseLocalStorage extends LocalStorage<Keys> {
   }
 
   public getSearchHistory() {
-    return this.get(Keys.SELECTED_FILE);
+    return JSON.parse(this.get(Keys.SEARCH_HISTORY) || "[]");
   }
 
   public setSelectedFile(file: IFile | null) {
-    this.set(Keys.SELECTED_FILE, JSON.stringify(file));
+    this.set(Keys.SELECTED_FILE, JSON.stringify(file || null));
   }
 
   public setFilesOnView(file: IFile[]) {
     this.set(Keys.FILES_ON_VIEW, JSON.stringify(file));
   }
 
-  public setSearchHistory(keyWords: string[]) {
-    this.set(Keys.SEARCH_HISTORY, JSON.stringify(keyWords));
+  public setSearchHistory(keyWords: string) {
+    let history = this.getSearchHistory();
+    if (!history) history = [];
+    if (history[history.length - 1] === keyWords) return;
+    history.push(keyWords);
+    this.set(Keys.SEARCH_HISTORY, JSON.stringify(history));
   }
 
   public clear() {

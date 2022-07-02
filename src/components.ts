@@ -263,6 +263,7 @@ export const SearchResult = (props: {
   Object.assign(count, {
     className: "search__result-count",
     onclick: props.handleDelete,
+    textContent: props.count.toString(),
   });
   wrapper.setAttribute("data-search_id", props.id);
   name.textContent = props.name;
@@ -273,7 +274,6 @@ export const SearchResult = (props: {
   ext.classList.add("search__result-icon");
   result.classList.add("search__result-text");
 
-  count.textContent = props.count.toString();
   ext.innerHTML = renderIcon(props.ext);
   arrow.appendChild(icon);
   groupItem.appendChild(arrow);
@@ -298,7 +298,6 @@ export const SearchResult = (props: {
       onclick: props.handleResultDelete,
       textContent: "x",
     });
-    // x.textContent = "x";
     el.innerHTML = newText;
     container.appendChild(el);
     container.appendChild(x);

@@ -1,0 +1,16 @@
+import "codemirror/lib/codemirror.css";
+import "codemirror/theme/material.css";
+import "codemirror/theme/ambiance-mobile.css";
+import "codemirror/theme/cobalt.css";
+import "codemirror/theme/3024-day.css";
+import "codemirror/theme/midnight.css";
+import "codemirror/theme/paraiso-light.css";
+import "codemirror/mode/xml/xml";
+import "codemirror/mode/javascript/javascript.js";
+import "codemirror/mode/css/css";
+import "codemirror/mode/python/python";
+import "codemirror/mode/ruby/ruby";
+import "codemirror/addon/search/search";
+import "codemirror/addon/search/searchcursor.js";
+import "codemirror/addon/dialog/dialog.js";
+import "codemirror/addon/dialog/dialog.css";

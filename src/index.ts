@@ -12,6 +12,7 @@ class App extends Folder {
     renderComponent(BackdropWithSpinner(), "app");
     this.handleFolderCreation();
     this.addGlobalEventListener();
+    Store.commit("setFilesOnViewFromLocalStorage");
     const filesOnView = Store.getState.filesOnView;
     if (filesOnView.length) {
       filesOnView.forEach((i) => {

@@ -566,6 +566,11 @@ body {
           input {
             width: 85%;
           }
+          button {
+            background-color: transparent;
+            border: none;
+            margin-left: 0.3rem;
+          }
 
           .replaceBtn {
             width: 13%;
@@ -644,6 +649,10 @@ body {
         &:focus {
           outline: 1px solid $blue;
           border: none;
+        }
+        &::placeholder {
+          padding-left: 0.22rem;
+          font-size: 0.7rem;
         }
       }
     }

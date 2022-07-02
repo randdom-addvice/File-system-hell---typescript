@@ -13,15 +13,13 @@ interface StoreInterface {
 
 const LS = UseLocalStorage.getInstance();
 
-// const LS = UseLocalStorage();
-
 const Store = new CreateStore<StoreInterface>({
   state: {
     currentIdTarget: "null",
     isFolderSelected: null,
     folders: {},
     files: {},
-    filesOnView: LS.getFilesOnView(),
+    filesOnView: [], //LS.getFilesOnView(),
     selectedFile: LS.getSelectedFile(),
   },
   mutations: {
@@ -49,9 +47,12 @@ const Store = new CreateStore<StoreInterface>({
     updateFilePath(state, p) {
       state.files[p.id].file_dir = p.path;
     },
+    setFilesOnViewFromLocalStorage(state) {
+      state.filesOnView = LS.getFilesOnView();
+    },
     addFileToFileOnView(state, file) {
       const foundFile = state.filesOnView.find(
-        (f) => f.file_id === file.file_id
+        (f) => f.file_dir === file.file_dir
       );
       if (foundFile) return;
       state.filesOnView.push(file);
@@ -60,8 +61,16 @@ const Store = new CreateStore<StoreInterface>({
       let newState = state.filesOnView.filter((i) => i.file_id !== id);
       state.filesOnView = newState;
     },
+    removeAllFileFromView(state) {
+      state.filesOnView = [];
+    },
     setSelectedFile(state, file) {
       state.selectedFile = file;
+    },
+  },
+  getters: {
+    getFilesOnView(state) {
+      return state.filesOnView as any;
     },
   },
 });

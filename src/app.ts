@@ -65,7 +65,10 @@ class File {
     state.isFolderSelected = currentTarget.dataset.type === "folder";
     state.currentIdTarget = currentTarget.dataset.file_id!;
     const file = Store.getState.files[state.currentIdTarget];
-    if (!file) return;
+    const isExist = Store.getState.filesOnView.find(
+      (i) => i.file_dir === file.file_dir
+    );
+    if (!file || isExist) return;
     this.addFileToFileOnView(state.currentIdTarget, file);
     this.addFileToOpenEditors(state.currentIdTarget, file);
 
@@ -132,7 +135,17 @@ class File {
     fileInEditor?.remove();
     CM.removeFileContent();
     LS.setSelectedFile(null);
-    LS.setFilesOnView(Store.getState.filesOnView);
+    LS.setFilesOnView(
+      Store.getState.filesOnView.filter((i) => i.file_id !== id)
+    );
+    const nextFile = LS.getFilesOnView()[LS.getFilesOnView().length - 1];
+    console.log(nextFile);
+    if (nextFile) {
+      Store.commit("setSelectedFile", nextFile);
+      LS.setSelectedFile(nextFile);
+      CM.injectFileContent();
+      return;
+    }
   }
 
   public addEventListenerToFiles() {
@@ -710,13 +723,19 @@ class SearchService extends File {
   private matchWholeWord: boolean = false;
   private useRegex: boolean = false;
   private matchedFiles: IFile[] = [];
+  private readonly searchHistory: string[] = LS.getSearchHistory();
+  private searchHistoryIndex: number = -1;
   private readonly navButtons: (HTMLElement | null)[] = [
     selectDomElement("#refresh__search"),
     selectDomElement("#clear__search"),
     selectDomElement("#collapse__search__results"),
+    selectDomElement("#replace__all"),
   ];
   private readonly messageContainer: HTMLElement = selectDomElement(
     "#message"
+  ) as HTMLElement;
+  private searchResultContainer = selectDomElement(
+    "#search-result-container"
   ) as HTMLElement;
 
   public constructor() {
@@ -732,10 +751,7 @@ class SearchService extends File {
   }
 
   private searchFiles(): void {
-    const searchResultContainer = selectDomElement(
-      "#search-result-container"
-    ) as HTMLElement;
-    searchResultContainer.innerHTML = "";
+    this.searchResultContainer.innerHTML = "";
     const { files } = Store.getState;
     const ignoreCase = Object.values(files)
       .map((i) => i.file_content)
@@ -840,7 +856,7 @@ class SearchService extends File {
       matchedLines.push({ file: array[index], lines: t });
     });
     matchedLines.forEach((i) => {
-      searchResultContainer.appendChild(
+      this.searchResultContainer.appendChild(
         SearchResult({
           ext: i.file.file_type,
           name: i.file.file_name,
@@ -880,16 +896,24 @@ class SearchService extends File {
         })
       );
     });
-    console.log(matchedLines);
   }
 
   // Listeners
   private refresh(): void {
-    console.log("refresh clicked");
+    this.searchFiles();
   }
 
   private clearSearch(): void {
-    console.log("clear search clicked");
+    this.searchValue = "";
+    this.replaceValue = "";
+    this.messageContainer.textContent = "";
+    this.searchResultContainer.innerHTML = "";
+    [
+      selectDomElement("#search__input"),
+      selectDomElement("#replace__input"),
+      selectDomElement("#to__include"),
+      selectDomElement("#to__exclude"),
+    ].forEach((i) => ((i as HTMLInputElement).value = ""));
   }
 
   private openNewSearchEditor(): void {
@@ -897,11 +921,37 @@ class SearchService extends File {
   }
 
   private collapseAll(): void {
-    console.log("collapse all clicked");
+    const searchResults = Array.from(
+      document.querySelectorAll(".search__result-text")
+    );
+    const icons = Array.from(
+      document.querySelectorAll(".search__result-wrapper i")
+    );
+    searchResults.forEach((i) => {
+      i.classList.add("search__result-text--hide");
+    });
+    icons.forEach((i) => {
+      i.classList.remove("fa-rotate-90");
+    });
   }
 
   private onSearchKeyUp(event: KeyboardEvent): void {
     this.searchValue = (event.target as HTMLInputElement).value;
+    if (["ArrowUp", "ArrowDown"].includes(event.key || event.code)) {
+      if (event.key === "ArrowUp" || event.code === "ArrowUp") {
+        this.searchHistoryIndex === this.searchHistory.length - 1
+          ? (this.searchHistoryIndex = 0)
+          : this.searchHistoryIndex++;
+      }
+      if (event.key === "ArrowDown" || event.code === "ArrowDown") {
+        this.searchHistoryIndex <= 0
+          ? (this.searchHistoryIndex = 0)
+          : this.searchHistoryIndex--;
+      }
+      const history = this.searchHistory[this.searchHistoryIndex] || "";
+      this.searchValue = history;
+      (selectDomElement("#search__input") as HTMLInputElement).value = history;
+    }
     this.navButtons.forEach(
       (i) =>
         ((i as HTMLButtonElement).disabled =
@@ -912,15 +962,21 @@ class SearchService extends File {
   }
 
   private onReplaceKeyUp(event: KeyboardEvent): void {
-    console.log("onReplaceKeyUp", event);
+    this.replaceValue = (event.target as HTMLInputElement).value;
+  }
+
+  private onSearchInputBlur(): void {
+    if (this.searchValue) LS.setSearchHistory(this.searchValue);
   }
 
   private onFilesToIncludeChange(event: KeyboardEvent): void {
     console.log("onFilesToIncludeChange", event);
+    this.filesToInclude = (event.target as HTMLInputElement).value;
   }
 
   private onFilesToExcludeChange(event: KeyboardEvent): void {
     console.log("onFilesToExcludeChange", event);
+    this.filesToExclude = (event.target as HTMLInputElement).value;
   }
 
   private matchCaseOnSearch(): void {
@@ -950,7 +1006,24 @@ class SearchService extends File {
   }
 
   private replaceAll(): void {
-    console.log("replace all clicked");
+    const matchedFiles = this.matchedFiles;
+    const updated = matchedFiles.map((i) => {
+      i.file_content = i.file_content.replaceAll(
+        this.searchValue,
+        this.replaceValue
+      );
+      return i;
+    });
+    const currentFileView = Store.getState.selectedFile;
+    const currUpdatedFile = updated.find(
+      (i) => i.file_dir === currentFileView?.file_dir
+    );
+    this.matchedFiles = updated;
+    if (currUpdatedFile) this.viewFile(currUpdatedFile);
+    this.searchFiles();
+    console.log("currUpdatedFile ==>", currUpdatedFile);
+    console.log("currentFileView ==>", currentFileView);
+    console.log("updated ==>", updated);
   }
 
   private toggleSearchDetail(): void {
@@ -962,7 +1035,14 @@ class SearchService extends File {
   }
 
   private toggleArrow(): void {
-    console.log("toggle arrow clicked");
+    const arrow = selectDomElement("#search__inputs__arrow i");
+    const wrapper = selectDomElement(".search__inputs-input .wrapper.replace");
+    arrow?.classList.toggle("fa-rotate-90");
+    wrapper?.classList.toggle("d-none");
+  }
+  private toggleFilesToInclude(): void {
+    const wrapper = selectDomElement(".search__inputs-input .toggled-inputs");
+    wrapper?.classList.toggle("d-none");
   }
 
   public addListeners(): void {
@@ -980,8 +1060,8 @@ class SearchService extends File {
     const matchRegexBtn = selectDomElement("#regex");
     const replaceAllBtn = selectDomElement("#replace__all");
     const toggleSearchDetailsBtn = selectDomElement("#toggle__search__details");
-    const filesToIncludeInput = selectDomElement("to__include");
-    const filesToExcludeInput = selectDomElement("to__exclude");
+    const filesToIncludeInput = selectDomElement("#to__include");
+    const filesToExcludeInput = selectDomElement("#to__exclude");
 
     refreshSearch?.addEventListener("click", this.refresh);
     clearSearch?.addEventListener("click", this.clearSearch);
@@ -989,11 +1069,18 @@ class SearchService extends File {
     collapseSearchResults?.addEventListener("click", this.collapseAll);
     searchInputArrow?.addEventListener("click", this.toggleArrow);
     searchInput?.addEventListener("keyup", this.onSearchKeyUp);
+    searchInput?.addEventListener("blur", this.onSearchInputBlur);
     replaceInput?.addEventListener("keyup", this.onReplaceKeyUp);
     matchCaseBtn?.addEventListener("click", this.matchCaseOnSearch);
     matchWholeWordBtn?.addEventListener("click", this.matchWholeWordOnSearch);
     matchRegexBtn?.addEventListener("click", this.useRegularExpressionOnSearch);
-    replaceAllBtn?.addEventListener("click", this.useRegularExpressionOnSearch);
+    replaceAllBtn?.addEventListener("click", this.replaceAll);
+    toggleSearchDetailsBtn?.addEventListener(
+      "click",
+      this.toggleFilesToInclude
+    );
+    filesToIncludeInput?.addEventListener("keyup", this.onFilesToIncludeChange);
+    filesToExcludeInput?.addEventListener("keyup", this.onFilesToExcludeChange);
   }
 }
 
