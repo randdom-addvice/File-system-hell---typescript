@@ -217,14 +217,13 @@ export const FileView = (props: FileView) => {
   container.classList.add("explorer__view-header-files-container");
   container.onclick = props.viewFile;
 
-  ["icon", "name", "status", "remove"].forEach((i) => {
+  ["icon", "name", "status"].forEach((i) => {
     const d = document.createElement("span");
     if (i === "icon") d.innerHTML = renderIcon(props.ext);
     if (i === "name") d.append(props.name);
-    if (i === "status") d.append(props.saved ? "status--visible" : "");
-    if (i === "remove") {
+    if (i === "status") {
       d.onclick = props.remove;
-      d.append("x");
+      d.classList.add(props.saved ? "status--visible" : "status");
     }
     d.classList.add(i);
     container.append(d);
@@ -338,10 +337,11 @@ export const OpenEditorFile = (props: FileView) => {
     const d = document.createElement("span");
     if (i === "icon") d.innerHTML = renderIcon(props.ext);
     if (i === "name") d.append(props.name);
-    if (i === "status") d.append(props.saved ? "status--visible" : "");
+    // if (i === "status") d.append(props.saved ? "status--visible" : "");
     if (i === "status") {
       d.onclick = props.remove;
-      d.append("x");
+      d.classList.add(props.saved ? "status--visible" : "status");
+      // d.append("x");
     }
     d.classList.add(i);
     wrapper.appendChild(d);

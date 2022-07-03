@@ -112,6 +112,9 @@ body {
         &:hover {
           .status {
             visibility: visible;
+            &:before {
+              visibility: visible;
+            }
           }
         }
       }
@@ -120,17 +123,33 @@ body {
         visibility: hidden;
         transition: all 0.2s linear;
         border-radius: 3px;
-        width: 16px;
+        width: 13px;
+        height: 13px;
         text-align: center;
         font-size: 0.8rem;
         cursor: pointer;
-
-        &--modified {
-          width: 15px;
-          height: 15px;
+        position: relative;
+        &--visible {
+          visibility: visible;
+          background-color: $primary-slate;
           border-radius: 50%;
-          background: darkgrey;
+        }
+        &::before {
+          content: "x";
+          position: absolute;
+          background-color: $primary-slate;
+          color: $white;
+          cursor: pointer;
+          top: 0;
+          bottom: 0;
+          right: 0;
+          left: 0;
           text-align: center;
+          width: 14px;
+          height: 14px;
+          font-size: 0.8rem;
+          border-radius: 2px;
+          visibility: hidden;
         }
         &:hover {
           color: #fff;
@@ -139,9 +158,11 @@ body {
       }
       .icon {
         margin-right: 1rem;
+        width: 14px;
+        height: 14px;
         object {
-          width: 16px;
-          height: 16px;
+          height: 100%;
+          width: 100%;
         }
       }
     }
@@ -418,6 +439,13 @@ body {
             align-items: center;
             height: 100%;
             padding: 0 0.5rem;
+            &:hover {
+              .status {
+                &:before {
+                  visibility: visible;
+                }
+              }
+            }
 
             span.icon {
               width: 1rem;
@@ -427,27 +455,42 @@ body {
                 height: 100%;
               }
             }
+            // span.status {
+            //   visibility: hidden;
+            //   background-color: $primary-color-md;
+            //   border-radius: 5rem;
+            //   width: 10px;
+            //   height: 10px;
+            // }
             span.status {
-              visibility: hidden;
-              background-color: $primary-color-md;
-              border-radius: 5rem;
-              width: 10px;
-              height: 10px;
-            }
-            &span.status--visible {
-              visibility: visible;
-            }
-            span.remove {
               visibility: hidden;
               transition: all 0.2s linear;
               border-radius: 3px;
-              width: 16px;
+              width: 12px;
+              height: 12px;
               text-align: center;
               font-size: 0.8rem;
+              position: relative;
 
-              &:hover {
-                color: #fff;
-                background-color: $primary-color-md;
+              &--visible {
+                visibility: visible;
+                background-color: $primary-slate;
+                border-radius: 50%;
+              }
+              &::before {
+                content: "x";
+                position: absolute;
+                background-color: $primary-slate;
+                color: $white;
+                cursor: pointer;
+                top: 0;
+                bottom: 0;
+                right: 0;
+                left: 0;
+                text-align: center;
+                width: 15px;
+                height: 15px;
+                visibility: hidden;
               }
             }
           }

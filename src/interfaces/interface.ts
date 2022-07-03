@@ -19,7 +19,7 @@ export interface IFolder {
   child?: [IFolder] | [];
 }
 
-export interface IFile {
+export interface IFile extends IFileDetails {
   file_id: string;
   file_dir: string;
   file_type: string;
@@ -36,6 +36,20 @@ export interface Storage extends IObjectKeys {
 
 export interface FolderClass {
   onFolderClick(e: MouseEvent): void;
+}
+export interface IFileDetails {
+  modified?: boolean;
+}
+
+export interface FileModule {
+  handleFileClick(e: MouseEvent): void;
+  viewFile(file: IFile): void;
+  addFileToFileOnView(id: string, file: IFile): void;
+  addFileToOpenEditors(id: string, file: IFile): void;
+  removeFileFromOnView(id: string): void;
+  addEventListenerToFiles(): void;
+  checkForFilesInDirectories(folder: IFolder): void;
+  updateFileOnType(value: boolean): void;
 }
 
 interface SyntheticEvent<T> extends Event {

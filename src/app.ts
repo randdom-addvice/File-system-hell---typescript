@@ -1,6 +1,7 @@
 import uid from "shortid";
 import { API } from "./api";
 import DragNDrop from "./DnD";
+import CodeMirror from "codemirror/lib/codemirror.js";
 import Store from "./store";
 // import { DnD as DragNDrop } from "./ConcreteImplementation";
 import "./styles/styles.scss";
@@ -65,10 +66,10 @@ class File {
     state.isFolderSelected = currentTarget.dataset.type === "folder";
     state.currentIdTarget = currentTarget.dataset.file_id!;
     const file = Store.getState.files[state.currentIdTarget];
-    const isExist = Store.getState.filesOnView.find(
+    const isExist = LS.getFilesOnView().find(
       (i) => i.file_dir === file.file_dir
     );
-    if (!file || isExist) return;
+    if (!file || isExist) return; //if file do not exist or already on view
     this.addFileToFileOnView(state.currentIdTarget, file);
     this.addFileToOpenEditors(state.currentIdTarget, file);
 
@@ -91,13 +92,13 @@ class File {
 
   public addFileToFileOnView(id: string, file: IFile): void {
     const container = selectDomElement("#explorer__view-header-group");
-    const isExist = Store.getState.filesOnView.find((i) => i.file_id === id);
+    const isExist = LS.getFilesOnView().find((i) => i.file_id === id);
     if (isExist) return;
     container?.appendChild(
       FileView({
         name: file.file_name,
         id: file.file_id,
-        saved: false,
+        saved: !!file?.modified,
         ext: file.file_type,
         remove: (e: MouseEvent) => {
           e.stopPropagation();
@@ -116,7 +117,7 @@ class File {
       OpenEditorFile({
         name: file.file_name,
         id: file.file_id,
-        saved: false,
+        saved: !!file?.modified,
         ext: file.file_type,
         remove: (e: MouseEvent) => {
           e.stopPropagation();
@@ -128,7 +129,7 @@ class File {
   }
 
   private removeFileFromOnView(id: string) {
-    Store.commit("removeFileFromView", id);
+    // Store.commit("removeFileFromView", id);
     const fileOnView = selectDomElement(`[data-file_view_id='${id}']`);
     const fileInEditor = selectDomElement(`[data-editor_file_id='${id}']`);
     fileOnView?.remove();
@@ -138,8 +139,9 @@ class File {
     LS.setFilesOnView(
       Store.getState.filesOnView.filter((i) => i.file_id !== id)
     );
+    Store.commit("setFilesOnView", LS.getFilesOnView());
     const nextFile = LS.getFilesOnView()[LS.getFilesOnView().length - 1];
-    console.log(nextFile);
+    // console.log(nextFile);
     if (nextFile) {
       Store.commit("setSelectedFile", nextFile);
       LS.setSelectedFile(nextFile);
@@ -167,6 +169,7 @@ class File {
   public checkForFilesInDirectories(folder: IFolder) {
     folder.files?.forEach(async (i) => {
       i.file_id = uid();
+      i.modified = false;
       renderComponent(
         FileBlock({
           name: i.file_name,
@@ -771,7 +774,8 @@ class SearchService extends File {
               !i.file_dir
                 .toLowerCase()
                 .includes(this.filesToExclude.toLowerCase());
-      });
+      }); //filter all files by the files to include or exclude
+
     const caseSensitive = includedFiles
       .map((i) => i.file_content)
       .map((x) => {
@@ -1064,5 +1068,15 @@ class SearchService extends File {
 //     console.log(changes, "state");
 //   },
 //   ["filesOnView"]
+// );
+// CM.CMInstance.on(
+//   "change",
+//   function (instance: typeof CodeMirror, event: Event) {
+//     // instance.codemirrorIgnore = true;
+//     // event.preventDefault();
+//     console.log("instance", instance);
+//     console.log("changeObj", event);
+//     console.log("changeObj", Store.getState.selectedFile);
+//   }
 // );
 export { File, Folder };

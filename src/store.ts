@@ -2,6 +2,7 @@ import CreateStore from "vanilla-ts-store";
 
 import { FileState, FolderState, IFile, IFolder } from "./interfaces/interface";
 import UseLocalStorage from "./useLocalStorage";
+
 interface StoreInterface {
   folders: FolderState; //{someId: {...IFolder}, someId: {...IFolder}} ( [key: string]: IFolder)
   files: FileState;
@@ -47,6 +48,9 @@ const Store = new CreateStore<StoreInterface>({
     updateFilePath(state, p) {
       state.files[p.id].file_dir = p.path;
     },
+    setFilesOnView(state, files) {
+      state.filesOnView = files;
+    },
     setFilesOnViewFromLocalStorage(state) {
       state.filesOnView = LS.getFilesOnView();
     },
@@ -58,8 +62,10 @@ const Store = new CreateStore<StoreInterface>({
       state.filesOnView.push(file);
     },
     removeFileFromView(state, id) {
+      console.log(state.filesOnView);
       let newState = state.filesOnView.filter((i) => i.file_id !== id);
       state.filesOnView = newState;
+      console.log(state.filesOnView);
     },
     removeAllFileFromView(state) {
       state.filesOnView = [];
