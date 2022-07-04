@@ -34,6 +34,11 @@ interface RenameFile {
   new_file_name: string;
 }
 
+interface WriteFile {
+  file_dir: string;
+  file_content: string;
+}
+
 interface IApi {
   getDirectories(): Promise<GetDirectoriesResponse>;
   getFileInDirectory(dir: string): Promise<GetFileInDirectoryResponse>;
@@ -48,6 +53,7 @@ interface IApi {
   createFile(newFile: CreateFile): Promise<AxiosResponse<string>>;
   renameFolder(body: RenameFolder): Promise<AxiosResponse<string>>;
   renameFile(body: RenameFile): Promise<AxiosResponse<string>>;
+  writeFile(body: WriteFile): Promise<AxiosResponse<string>>;
 }
 
 class API implements IApi {
@@ -122,6 +128,10 @@ class API implements IApi {
 
   public async renameFile(body: RenameFile): Promise<AxiosResponse<string>> {
     return req.patch("/files/rename", { ...body });
+  }
+
+  public async writeFile(body: WriteFile): Promise<AxiosResponse<string>> {
+    return req.patch("/files/write", { ...body });
   }
 }
 

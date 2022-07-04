@@ -156,11 +156,15 @@ class File {
   }
 
   private removeFileFromOnView(id: string) {
-    const file = LS.getSelectedFile();
-    if (file.modified) {
+    const currFileView = LS.getSelectedFile();
+    const selectedFile = LS.getFilesOnView().find((i) => i.file_id === id);
+    if (currFileView.modified) {
+      // console.log(currFileView);
+      if (!selectedFile) return;
+      this.viewFile(selectedFile); //display the file to be removed on order for CM to read it's content
       renderComponent(
         DialogModal({
-          message: "Do you want to save the changes you made to index.ts?",
+          message: `Do you want to save the changes you made to ${selectedFile?.file_name} ?`,
         }),
         "modal",
         () => {
@@ -172,8 +176,9 @@ class File {
             (i) => (i.onclick = this.closeDialogModal)
           );
           save.onclick = () => {
-            this.saveFileChanges();
+            this.saveFileChanges(selectedFile);
             this.closeDialogModal();
+            // this.removeFile(id);
           };
           ignore.onclick = () => {
             this.closeDialogModal();
@@ -192,8 +197,31 @@ class File {
     selectDomElement("#dialog__modal")?.remove();
   }
 
-  saveFileChanges(): void {
-    console.log("file saved");
+  async saveFileChanges(file: IFile): Promise<void> {
+    try {
+      if (!CM.getCM) return;
+      console.log("saved");
+      console.log(CM.getCM);
+      let doc = "";
+      CM.getCM.getDoc().children.map((i: any) => {
+        i.lines
+          .map((l: any) => l.text)
+          .forEach((x: any) => {
+            doc += x;
+            doc += "\n";
+          });
+        return doc;
+      });
+      await req.writeFile({
+        file_dir: file.file_dir,
+        file_content: file.file_content,
+      });
+      console.log(doc);
+      console.log(file);
+      CM.updateFileOnType(false);
+    } catch (error) {
+      alert("OOps an error occurred");
+    }
   }
 
   public addEventListenerToFiles() {

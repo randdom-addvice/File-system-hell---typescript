@@ -17,7 +17,11 @@ const modeMatcher: { [key: string]: string } = {
 };
 
 export class CodeMirrorManager {
-  private CMInstance: typeof CodeMirror = null;
+  public CMInstance: typeof CodeMirror = null;
+
+  get getCM(): any {
+    return this.CMInstance;
+  }
 
   removeFileContent() {
     (document.getElementById("file__content") as HTMLElement).innerHTML = "";
@@ -39,10 +43,15 @@ export class CodeMirrorManager {
     });
     cm.on("change", (instance: typeof CodeMirror, event: Event) => {
       this.updateFileOnType(true);
+      // console.log(cm.getDoc());
+      // console.log(cm.getDoc().children);
+
+      // console.log(document);
     });
+    this.CMInstance = cm;
   }
 
-  private updateFileOnType(value: boolean) {
+  public updateFileOnType(value: boolean) {
     //update files onView and selected file on localStorage and state
     let file = Store.getState.selectedFile;
     let filesOnView = Store.getState.filesOnView.map((i) => {
@@ -51,7 +60,7 @@ export class CodeMirrorManager {
     });
     if (!file) return;
     file.modified = value;
-    console.log(file);
+
     Store.commit("setSelectedFile", file);
     Store.commit("setFilesOnView", filesOnView);
     LS.setSelectedFile(file);
