@@ -7,7 +7,12 @@ export const deleteDomElement = (element: string) => {
 };
 
 export const selectDomElement = (element: string): HTMLElement | null => {
-  return document.querySelector(element);
+  return document.querySelector(element) as HTMLElement;
+};
+export const selectDomElements = (
+  element: string
+): NodeListOf<HTMLElement> | null => {
+  return document.querySelectorAll(element);
 };
 
 export const attachEvent = (

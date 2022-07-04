@@ -822,6 +822,95 @@ body {
     color: $danger;
   }
 }
+.dialog__modal {
+  &-overlay {
+    height: 100vh;
+    width: 100vw;
+    z-index: 4;
+    position: fixed;
+    top: 0;
+    background-color: rgba(255, 255, 255, 0.846);
+    filter: blur(2px);
+  }
+  &-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 450px;
+    transform: translate(calc(50vw - 50%), calc(50vh - 50%));
+    z-index: 5;
+    background-color: #fff;
+    box-shadow: 0px 0px 0px 3px rgba(0, 0, 0, 0.056),
+      0px 0px 0px 3px rgba(0, 0, 0, 0.054);
+    border: 2px solid $grey;
+  }
+  &-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    // padding: 0.3rem 0.4rem;
+    h4 {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: $dark-grey;
+      padding-left: 0.3rem;
+    }
+    button.cancel {
+      background-color: transparent;
+      border: none;
+      width: 25px;
+      // background-color: red;
+      padding: 0.3rem 0.3rem 0.2rem 0.3rem;
+      text-align: center;
+      color: $grey;
+      &:hover {
+        background-color: $danger;
+        color: #fff;
+      }
+    }
+  }
+  &-content {
+    width: 80%;
+    margin: 1rem auto;
+  }
+  &-message {
+    margin-bottom: 1rem;
+    p {
+      font-size: 1.3rem;
+      font-weight: 400;
+      color: $info;
+    }
+  }
+  &-subMessage {
+    margin-bottom: 1rem;
+    p {
+      font-size: 0.8rem;
+    }
+  }
+  &-footer {
+    background-color: $light-grey;
+    &-container {
+      width: 50%;
+      margin-left: auto;
+      display: flex;
+      justify-content: flex-start;
+      padding: 0.6rem 0;
+    }
+
+    button {
+      min-width: 50px;
+      display: inline-block;
+      border: 1px solid $grey;
+      padding: 0.1rem 0.3rem;
+      margin-right: 0.5rem;
+      text-transform: capitalize;
+      &:hover {
+        background-color: $light-blue;
+        border: 1px solid $info;
+      }
+    }
+  }
+}
 
 // Levels
 .nested {

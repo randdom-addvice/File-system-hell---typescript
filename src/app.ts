@@ -14,6 +14,7 @@ import {
 } from "./interfaces/interface";
 import {
   BackdropWithSpinner,
+  DialogModal,
   DropDownContext,
   FileBlock,
   FileView,
@@ -26,7 +27,12 @@ import {
   TextFieldErrorMessage,
   unmountComponent,
 } from "./components";
-import { attachEvent, deleteDomElement, selectDomElement } from "./utils";
+import {
+  attachEvent,
+  deleteDomElement,
+  selectDomElement,
+  selectDomElements,
+} from "./utils";
 import { AxiosError } from "axios";
 import CodeMirrorManager from "./cm";
 import UseLocalStorage from "./useLocalStorage";
@@ -128,8 +134,7 @@ class File {
     );
   }
 
-  private removeFileFromOnView(id: string) {
-    // Store.commit("removeFileFromView", id);
+  private removeFile(id: string): void {
     const fileOnView = selectDomElement(`[data-file_view_id='${id}']`);
     const fileInEditor = selectDomElement(`[data-editor_file_id='${id}']`);
     fileOnView?.remove();
@@ -148,6 +153,47 @@ class File {
       CM.injectFileContent();
       return;
     }
+  }
+
+  private removeFileFromOnView(id: string) {
+    const file = LS.getSelectedFile();
+    if (file.modified) {
+      renderComponent(
+        DialogModal({
+          message: "Do you want to save the changes you made to index.ts?",
+        }),
+        "modal",
+        () => {
+          const save = selectDomElement("#dialog__save") as HTMLButtonElement;
+          const ignore = selectDomElement(
+            "#dialog__ignore__save"
+          ) as HTMLButtonElement;
+          selectDomElements(".close__dialog")?.forEach(
+            (i) => (i.onclick = this.closeDialogModal)
+          );
+          save.onclick = () => {
+            this.saveFileChanges();
+            this.closeDialogModal();
+          };
+          ignore.onclick = () => {
+            this.closeDialogModal();
+            this.removeFile(id);
+          };
+        }
+      );
+      return;
+    }
+    // Store.commit("removeFileFromView", id);
+
+    this.removeFile(id);
+  }
+
+  private closeDialogModal(): void {
+    selectDomElement("#dialog__modal")?.remove();
+  }
+
+  saveFileChanges(): void {
+    console.log("file saved");
   }
 
   public addEventListenerToFiles() {

@@ -185,27 +185,6 @@ export const FileBlock = (props: {
     `;
 };
 
-export const FileView2 = (props: {
-  name: string;
-  ext: string;
-  saved: boolean;
-  id: string;
-  fn: any;
-}) => {
-  return `
-     <div class="explorer__view-header-files" data-file_view_id="${props.id}">
-        <div class="explorer__view-header-files-container">
-            <span class="icon">
-                ${renderIcon(props.ext)}
-            </span>
-            <span class="name">${props.name}</span>
-            <span class="status ${props.saved ? "status--visible" : ""}"></span>
-            <span class="remove">x</span>
-        </div>
-    </div>
-  `;
-};
-
 export const FileView = (props: FileView) => {
   const wrapper = document.createElement("div");
   const container = document.createElement("div");
@@ -350,6 +329,41 @@ export const OpenEditorFile = (props: FileView) => {
   return container;
 };
 
+export const DialogModal = (props: { message: string }) => {
+  return `
+    <section class="dialog" id="dialog__modal">
+        <div class="dialog__modal-overlay close__dialog"\></div>
+        <div class="dialog__modal">
+            <div class="dialog__modal-container">
+                <div class="dialog__modal-header">
+                    <h4 class="warning">Warning ⚠</h4>
+                    <button class="cancel close__dialog">X</button>
+                </div>
+                <div class="dialog__modal-content">
+                    <div class="dialog__modal-message">
+                        <p>${props.message}</p>
+                    </div>
+                    <div class="dialog__modal-subMessage">
+                        <p>Your changes will be lost if you don't save them.</p>
+                    </div>
+                </div>
+                <div class="dialog__modal-footer">
+                    <div class="dialog__modal-footer-container">
+                        <div class="action__buttons">
+                            <div class="action__buttons-container">
+                                <button id="dialog__save" >save</button>
+                                <button id="dialog__ignore__save" >Don't Save</button>
+                                <button class="close__dialog">cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+  `;
+};
+
 export const TextField = (props: { isFileInput: boolean }) => {
   const textFieldIcon = props.isFileInput
     ? `<object type="image/svg+xml" data=${defaultFileIcon}></object>`
@@ -438,9 +452,14 @@ export const BackdropWithSpinner = () => {
     `;
 };
 
-export const renderComponent = (component: string, element: string) => {
+export const renderComponent = (
+  component: string,
+  element: string,
+  attachListener?: () => void
+) => {
   let el = <HTMLElement>document.getElementById(element);
   el.innerHTML += component;
+  if (attachListener) attachListener();
 };
 
 export const unmountComponent = (componentId: string) => {
