@@ -48,6 +48,9 @@ const Store = new CreateStore<StoreInterface>({
     updateFilePath(state, p) {
       state.files[p.id].file_dir = p.path;
     },
+    updateFileContent(state, p) {
+      state.files[p.id].file_content = p.file_content;
+    },
     setFilesOnView(state, files) {
       state.filesOnView = files;
     },
@@ -62,10 +65,8 @@ const Store = new CreateStore<StoreInterface>({
       state.filesOnView.push(file);
     },
     removeFileFromView(state, id) {
-      console.log(state.filesOnView);
       let newState = state.filesOnView.filter((i) => i.file_id !== id);
       state.filesOnView = newState;
-      console.log(state.filesOnView);
     },
     removeAllFileFromView(state) {
       state.filesOnView = [];

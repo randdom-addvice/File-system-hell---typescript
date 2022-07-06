@@ -81,6 +81,13 @@ class File {
 
     Store.commit("addFileToFileOnView", file);
     Store.commit("setSelectedFile", file);
+    //create a new DOM element to inject CodeMirror into
+    const fileEditorContainer = document.getElementById(
+      "file__content"
+    ) as HTMLElement;
+    const editorHTML = `<div data-editor_cm_id=${file.file_id} id="cm-${file.file_id}" class="tab-pane d-none"></div>`;
+    fileEditorContainer.innerHTML += editorHTML;
+    CM.injectCM(file);
     this.viewFile(file);
     let folder = new Folder();
     if (e.button === 2) {
@@ -137,18 +144,20 @@ class File {
   private removeFile(id: string): void {
     const fileOnView = selectDomElement(`[data-file_view_id='${id}']`);
     const fileInEditor = selectDomElement(`[data-editor_file_id='${id}']`);
+    const editor = selectDomElement(`#cm-${id}`);
     fileOnView?.remove();
     fileInEditor?.remove();
-    CM.removeFileContent();
     LS.setSelectedFile(null);
     LS.setFilesOnView(
       Store.getState.filesOnView.filter((i) => i.file_id !== id)
     );
     Store.commit("setFilesOnView", LS.getFilesOnView());
+    editor?.remove();
     const nextFile = LS.getFilesOnView()[LS.getFilesOnView().length - 1];
     if (nextFile) {
       Store.commit("setSelectedFile", nextFile);
       LS.setSelectedFile(nextFile);
+      this.viewFile(nextFile);
       // CM.injectFileContent();
       return;
     }
@@ -157,9 +166,7 @@ class File {
   private removeFileFromOnView(id: string) {
     const currFileView = LS.getSelectedFile();
     const selectedFile = LS.getFilesOnView().find((i) => i.file_id === id);
-    console.log(CM.getCM2, "fileData");
-    if (currFileView.modified) {
-      // console.log(currFileView);
+    if (selectedFile?.modified) {
       if (!selectedFile) return;
       this.viewFile(selectedFile); //display the file to be removed on order for CM to read it's content
       renderComponent(
@@ -178,7 +185,7 @@ class File {
           save.onclick = () => {
             this.saveFileChanges(selectedFile);
             this.closeDialogModal();
-            // this.removeFile(id);
+            this.removeFile(id);
           };
           ignore.onclick = () => {
             this.closeDialogModal();
@@ -189,7 +196,6 @@ class File {
       return;
     }
     // Store.commit("removeFileFromView", id);
-
     this.removeFile(id);
   }
 
@@ -197,13 +203,14 @@ class File {
     selectDomElement("#dialog__modal")?.remove();
   }
 
-  async saveFileChanges(file: IFile): Promise<void> {
+  public async saveFileChanges(file: IFile): Promise<void> {
     try {
+      const f = Object.values(Store.getState.files).find(
+        (i) => i.file_dir === file.file_dir
+      ); //use this to get the correct file based on the file path as the file changes on page reload
       if (!CM.getCM) return;
-      console.log("saved");
-      console.log(CM.getCM);
       let doc = "";
-      CM.getCM.getDoc().children.map((i: any) => {
+      CM.getCM[file.file_id].getDoc().children.map((i: any) => {
         i.lines
           .map((l: any) => l.text)
           .forEach((x: any) => {
@@ -214,12 +221,18 @@ class File {
       });
       await req.writeFile({
         file_dir: file.file_dir,
-        file_content: file.file_content,
+        file_content: doc,
       });
-      console.log(doc);
-      console.log(file);
-      CM.updateFileOnType(false);
+      Store.commit("updateFileContent", {
+        id: f?.file_id,
+        file_content: doc,
+      });
+      const updatedFile = { ...file, file_content: doc };
+      console.log({ ...file, file_content: doc });
+      LS.setSelectedFile(updatedFile);
+      CM.updateFileOnType(false, updatedFile);
     } catch (error) {
+      console.log(error);
       alert("OOps an error occurred");
     }
   }
@@ -268,34 +281,33 @@ class File {
     editorTabFiles?.forEach((i) => i.classList.add("d-none"));
     selectDomElement(`#cm-${id}`)?.classList.remove("d-none");
     currentTarget?.classList.add("explorer__view-header-files--active");
-    console.log(CM.getCM2[id]);
-    CM.getCM2[id].refresh();
+    CM.getCM[id]?.refresh();
   }
 
   public initEditor(): void {
     const file = new File();
     const filesOnView = Store.getState.filesOnView;
     const currFile = Store.getState.selectedFile || filesOnView[0];
+    console.log(currFile?.file_content);
     if (filesOnView.length) {
       filesOnView.forEach((i) => {
         const fileEditorContainer = document.getElementById(
           "file__content"
         ) as HTMLElement;
-        const editorHTML = `<textarea data-editor_cm_id=${i.file_id} id="cm-${i.file_id}" class="e">${i.file_content}</textarea>`;
-        const editorHTML2 = `<div data-editor_cm_id=${i.file_id} id="cm-${i.file_id}" class="tab-pane d-none"></div>`;
-        fileEditorContainer.innerHTML += editorHTML2;
+        const editorHTML = `<div data-editor_cm_id=${i.file_id} id="cm-${i.file_id}" class="tab-pane d-none"></div>`;
+        fileEditorContainer.innerHTML += editorHTML;
         // console.log(fileEditorContainer);
         file.addFileToFileOnView("", i);
         // console.log(i);
         // file.viewFile(Store.getState.selectedFile || filesOnView[0]);
         file.addFileToOpenEditors("", i);
-        // CM.injectFileContent(i.file_id, i); //not included yet
+        // CM.injectFileContent(i.file_id, i);
       });
-      CM.injectFileContentToTextArea(filesOnView); //not included yet
+      CM.injectFileContent(filesOnView);
     }
-    // console.log(CM.getCM2[currFile.file_id].getWrapperElement());
-    // console.log(CM.getCM2[currFile.file_id].getDoc().children);
-    this.showEditor(currFile.file_id);
+    // console.log(CM.getCM[currFile.file_id].getWrapperElement());
+    // console.log(CM.getCM[currFile.file_id].getDoc().children);
+    if (currFile) this.showEditor(currFile.file_id);
   }
 }
 
@@ -637,7 +649,7 @@ class Folder {
     });
   }
 
-  private addEventListenersToFolders() {
+  public addEventListenersToFolders() {
     const folders = <HTMLElement[]>(
       Array.from(document.querySelectorAll(".explorer__content-folder"))
     );
@@ -653,7 +665,7 @@ class Folder {
     });
   }
 
-  protected addGlobalEventListener() {
+  public addGlobalEventListener() {
     const searchService = new SearchService();
     const addFileBtn = selectDomElement("#add__file");
     const addFolderBtn = selectDomElement("#add__folder");
@@ -769,7 +781,7 @@ class Folder {
     unmountComponent("loading-spinner");
   }
 
-  protected async handleFolderCreation() {
+  public async handleFolderCreation() {
     try {
       let {
         data: { directories, root_dir },
@@ -1173,6 +1185,14 @@ class SearchService extends File {
     });
   }
 }
+
+CodeMirror.commands.save = () => {
+  const file = new File();
+  const f = LS.getSelectedFile();
+  // console.log("saved", LS.getSelectedFile());
+  file.saveFileChanges(f);
+  CM.updateFileOnType(false, f);
+};
 
 // Store.subscribeEvents(
 //   (_, changes) => {
