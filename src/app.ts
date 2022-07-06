@@ -228,7 +228,6 @@ class File {
         file_content: doc,
       });
       const updatedFile = { ...file, file_content: doc };
-      console.log({ ...file, file_content: doc });
       LS.setSelectedFile(updatedFile);
       CM.updateFileOnType(false, updatedFile);
     } catch (error) {
@@ -288,7 +287,6 @@ class File {
     const file = new File();
     const filesOnView = Store.getState.filesOnView;
     const currFile = Store.getState.selectedFile || filesOnView[0];
-    console.log(currFile?.file_content);
     if (filesOnView.length) {
       filesOnView.forEach((i) => {
         const fileEditorContainer = document.getElementById(
@@ -296,17 +294,11 @@ class File {
         ) as HTMLElement;
         const editorHTML = `<div data-editor_cm_id=${i.file_id} id="cm-${i.file_id}" class="tab-pane d-none"></div>`;
         fileEditorContainer.innerHTML += editorHTML;
-        // console.log(fileEditorContainer);
         file.addFileToFileOnView("", i);
-        // console.log(i);
-        // file.viewFile(Store.getState.selectedFile || filesOnView[0]);
         file.addFileToOpenEditors("", i);
-        // CM.injectFileContent(i.file_id, i);
       });
       CM.injectFileContent(filesOnView);
     }
-    // console.log(CM.getCM[currFile.file_id].getWrapperElement());
-    // console.log(CM.getCM[currFile.file_id].getDoc().children);
     if (currFile) this.showEditor(currFile.file_id);
   }
 }
@@ -365,8 +357,6 @@ class Folder {
 
         if (state.isFolderSelected) {
           let newDirPath = `${newFilePath}\\${fileName.trim()}`;
-          // console.log(state.currentIdTarget);
-
           const res = await req.createDirectory(newDirPath);
           let folderId = uid();
           let folderSplit = newDirPath.split("\\");
@@ -1189,28 +1179,8 @@ class SearchService extends File {
 CodeMirror.commands.save = () => {
   const file = new File();
   const f = LS.getSelectedFile();
-  // console.log("saved", LS.getSelectedFile());
   file.saveFileChanges(f);
   CM.updateFileOnType(false, f);
 };
 
-// Store.subscribeEvents(
-//   (_, changes) => {
-//     const keys = Object.keys(changes);
-//     // if (keys.includes("filesOnView")) console.log(keys, "changes");
-//     console.log(Store.getState.filesOnView, "state");
-//     console.log(changes, "state");
-//   },
-//   ["filesOnView"]
-// );
-// CM.CMInstance.on(
-//   "change",
-//   function (instance: typeof CodeMirror, event: Event) {
-//     // instance.codemirrorIgnore = true;
-//     // event.preventDefault();
-//     console.log("instance", instance);
-//     console.log("changeObj", event);
-//     console.log("changeObj", Store.getState.selectedFile);
-//   }
-// );
 export { File, Folder };
