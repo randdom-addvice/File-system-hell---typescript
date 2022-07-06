@@ -93,7 +93,7 @@ class File {
     Store.commit("setSelectedFile", file);
     LS.setSelectedFile(file);
     LS.setFilesOnView(Store.getState.filesOnView);
-    CM.injectFileContent();
+    this.showEditor(file.file_id);
   }
 
   public addFileToFileOnView(id: string, file: IFile): void {
@@ -146,11 +146,10 @@ class File {
     );
     Store.commit("setFilesOnView", LS.getFilesOnView());
     const nextFile = LS.getFilesOnView()[LS.getFilesOnView().length - 1];
-    // console.log(nextFile);
     if (nextFile) {
       Store.commit("setSelectedFile", nextFile);
       LS.setSelectedFile(nextFile);
-      CM.injectFileContent();
+      // CM.injectFileContent();
       return;
     }
   }
@@ -158,6 +157,7 @@ class File {
   private removeFileFromOnView(id: string) {
     const currFileView = LS.getSelectedFile();
     const selectedFile = LS.getFilesOnView().find((i) => i.file_id === id);
+    console.log(CM.getCM2, "fileData");
     if (currFileView.modified) {
       // console.log(currFileView);
       if (!selectedFile) return;
@@ -256,6 +256,46 @@ class File {
       this.addEventListenerToFiles();
       Store.commit("setFiles", { id: i.file_id, file: i });
     });
+  }
+
+  private showEditor(id: string) {
+    const currentTarget = selectDomElement(`[data-file_view_id='${id}']`);
+    const editorTabHeaders = selectDomElements(".tab-links");
+    const editorTabFiles = selectDomElements(".tab-pane");
+    editorTabHeaders?.forEach((i) =>
+      i.classList.remove("explorer__view-header-files--active")
+    );
+    editorTabFiles?.forEach((i) => i.classList.add("d-none"));
+    selectDomElement(`#cm-${id}`)?.classList.remove("d-none");
+    currentTarget?.classList.add("explorer__view-header-files--active");
+    console.log(CM.getCM2[id]);
+    CM.getCM2[id].refresh();
+  }
+
+  public initEditor(): void {
+    const file = new File();
+    const filesOnView = Store.getState.filesOnView;
+    const currFile = Store.getState.selectedFile || filesOnView[0];
+    if (filesOnView.length) {
+      filesOnView.forEach((i) => {
+        const fileEditorContainer = document.getElementById(
+          "file__content"
+        ) as HTMLElement;
+        const editorHTML = `<textarea data-editor_cm_id=${i.file_id} id="cm-${i.file_id}" class="e">${i.file_content}</textarea>`;
+        const editorHTML2 = `<div data-editor_cm_id=${i.file_id} id="cm-${i.file_id}" class="tab-pane d-none"></div>`;
+        fileEditorContainer.innerHTML += editorHTML2;
+        // console.log(fileEditorContainer);
+        file.addFileToFileOnView("", i);
+        // console.log(i);
+        // file.viewFile(Store.getState.selectedFile || filesOnView[0]);
+        file.addFileToOpenEditors("", i);
+        // CM.injectFileContent(i.file_id, i); //not included yet
+      });
+      CM.injectFileContentToTextArea(filesOnView); //not included yet
+    }
+    // console.log(CM.getCM2[currFile.file_id].getWrapperElement());
+    // console.log(CM.getCM2[currFile.file_id].getDoc().children);
+    this.showEditor(currFile.file_id);
   }
 }
 

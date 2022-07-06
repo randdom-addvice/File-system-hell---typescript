@@ -192,9 +192,9 @@ export const FileView = (props: FileView) => {
   icon.setAttribute("type", "image/svg+xml");
   icon.setAttribute("data", "image/svg+xml");
   wrapper.setAttribute("data-file_view_id", props.id);
-  wrapper.classList.add("explorer__view-header-files");
+  wrapper.classList.add(...["explorer__view-header-files", "tab-links"]);
   container.classList.add("explorer__view-header-files-container");
-  container.onclick = props.viewFile;
+  wrapper.onclick = props.viewFile;
 
   ["icon", "name", "status"].forEach((i) => {
     const d = document.createElement("span");

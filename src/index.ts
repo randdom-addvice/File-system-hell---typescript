@@ -1,26 +1,39 @@
 import { File, Folder } from "./app";
+import CodeMirrorManager from "./cm";
 import { BackdropWithSpinner, renderComponent } from "./components";
 import Store from "./store";
 import { selectDomElement } from "./utils";
+const CM = new CodeMirrorManager();
 
 class App extends Folder {
   constructor() {
     super();
   }
+
   public init() {
     const file = new File();
+
     renderComponent(BackdropWithSpinner(), "app");
     this.handleFolderCreation();
     this.addGlobalEventListener();
     Store.commit("setFilesOnViewFromLocalStorage");
-    const filesOnView = Store.getState.filesOnView;
-    if (filesOnView.length) {
-      filesOnView.forEach((i) => {
-        file.addFileToFileOnView("", i);
-        file.viewFile(Store.getState.selectedFile || filesOnView[0]);
-        file.addFileToOpenEditors("", i);
-      });
-    }
+    // const filesOnView = Store.getState.filesOnView;
+    // if (filesOnView.length) {
+    //   filesOnView.forEach((i) => {
+    //     const fileEditorContainer = document.getElementById(
+    //       "file__content"
+    //     ) as HTMLElement;
+    //     const editorHTML = `<div data-editor_cm_id=${i.file_id} class="e"></div>`;
+    //     fileEditorContainer.innerHTML += editorHTML;
+    //     // console.log(fileEditorContainer);
+    //     file.addFileToFileOnView("", i);
+    //     // console.log(i);
+    //     // file.viewFile(Store.getState.selectedFile || filesOnView[0]);
+    //     file.addFileToOpenEditors("", i);
+    //     CM.injectFileContent(i.file_id, i); //not included yet
+    //   });
+    // }
+    file.initEditor();
     const foldersContainer = selectDomElement(".explorer__content");
     const workSpaceToggler = selectDomElement("#workspace-toggler");
     const editorToggler = selectDomElement("#open-editors-toggler");
