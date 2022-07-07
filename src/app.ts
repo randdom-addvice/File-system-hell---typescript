@@ -305,8 +305,14 @@ class File {
   private newUntitledFile(): void {
     console.log("open new untitled file");
   }
+
   private saveAll(): void {
-    console.log("saved all");
+    const unsavedFiles = LS.getFilesOnView().filter(
+      (i) => i?.modified === true
+    );
+    unsavedFiles.forEach(async (i) => {
+      await this.saveFileChanges(i);
+    });
   }
   private closeAllEditor(): void {
     LS.setFilesOnView([]);
@@ -328,7 +334,7 @@ class File {
     const closeAllBtn = selectDomElement("#close_all_editors");
 
     newUntitledFileBtn?.addEventListener("click", this.newUntitledFile);
-    saveAllBtn?.addEventListener("click", this.saveAll);
+    saveAllBtn?.addEventListener("click", () => this.saveAll());
     closeAllBtn?.addEventListener("click", this.closeAllEditor);
   }
 }
