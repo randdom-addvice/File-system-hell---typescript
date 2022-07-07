@@ -81,6 +81,7 @@ class File {
 
     Store.commit("addFileToFileOnView", file);
     Store.commit("setSelectedFile", file);
+    LS.setFilesOnView([...LS.getFilesOnView(), file]);
     //create a new DOM element to inject CodeMirror into
     const fileEditorContainer = document.getElementById(
       "file__content"
@@ -99,7 +100,6 @@ class File {
   public viewFile(file: IFile): void {
     Store.commit("setSelectedFile", file);
     LS.setSelectedFile(file);
-    LS.setFilesOnView(Store.getState.filesOnView);
     this.showEditor(file.file_id);
   }
 
@@ -300,6 +300,36 @@ class File {
       CM.injectFileContent(filesOnView);
     }
     if (currFile) this.showEditor(currFile.file_id);
+  }
+
+  private newUntitledFile(): void {
+    console.log("open new untitled file");
+  }
+  private saveAll(): void {
+    console.log("saved all");
+  }
+  private closeAllEditor(): void {
+    LS.setFilesOnView([]);
+    LS.setSelectedFile(null);
+    Store.commit("setFilesOnViewFromLocalStorage");
+    ["explorer__view-header-group", "file__content"].forEach((i) => {
+      const e = document.getElementById(i) as HTMLElement;
+      let first = e.firstElementChild;
+      while (first) {
+        first.remove();
+        first = e.firstElementChild;
+      }
+    });
+  }
+
+  public addGlobalListeners(): void {
+    const newUntitledFileBtn = selectDomElement("#new_untitled_file");
+    const saveAllBtn = selectDomElement("#save_all");
+    const closeAllBtn = selectDomElement("#close_all_editors");
+
+    newUntitledFileBtn?.addEventListener("click", this.newUntitledFile);
+    saveAllBtn?.addEventListener("click", this.saveAll);
+    closeAllBtn?.addEventListener("click", this.closeAllEditor);
   }
 }
 
@@ -657,6 +687,7 @@ class Folder {
 
   public addGlobalEventListener() {
     const searchService = new SearchService();
+    const file = new File();
     const addFileBtn = selectDomElement("#add__file");
     const addFolderBtn = selectDomElement("#add__folder");
     const explorerBtn = selectDomElement("#explorer__icon-file");
@@ -721,6 +752,7 @@ class Folder {
       }
     });
     searchService.addListeners();
+    file.addGlobalListeners();
   }
 
   /**
