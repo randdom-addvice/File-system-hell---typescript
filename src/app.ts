@@ -15,6 +15,8 @@ import {
 import {
   BackdropWithSpinner,
   DialogModal,
+  DirectorySelect,
+  DirectorySelectContainer,
   DropDownContext,
   FileBlock,
   FileView,
@@ -30,10 +32,12 @@ import {
 import {
   attachEvent,
   deleteDomElement,
+  sanitizeString,
   selectDomElement,
   selectDomElements,
 } from "./utils";
 import { AxiosError } from "axios";
+import swal from "sweetalert";
 import CodeMirrorManager from "./cm";
 import UseLocalStorage from "./useLocalStorage";
 const req = new API();
@@ -163,9 +167,100 @@ class File {
     }
   }
 
+  //run function when confirm button is clicked on modal
+  private saveUntitledFile(untitledFile: IFile): void {
+    const selectedFolders = Array.from(
+      document.querySelectorAll(
+        "input[type=checkbox][name=directory__select]:checked"
+      ),
+      (e) => (e as HTMLInputElement).value
+    );
+    const fileName = selectDomElement(
+      "input[type=text][name=file__name]"
+    ) as HTMLInputElement;
+    const { folders } = Store.getState;
+    if (!selectedFolders.length) {
+      swal({
+        title: "Wait!",
+        text: "You need to select at least one directory!",
+        icon: "error",
+      });
+      return;
+    }
+
+    if (fileName.value.split(".").length < 2) {
+      swal("File extension name is required. E.g index.js");
+      return;
+    }
+
+    selectedFolders.forEach(async (i) => {
+      const body = {
+        output_dir: folders[i].path,
+        file_name: sanitizeString(fileName.value.split(".")[0]),
+        file_ext: `.${sanitizeString(fileName.value.split(".").pop() || "")}`,
+        content: this.getDoc(untitledFile.file_id),
+      };
+      const newFileId = uid();
+      await req.createFile({ ...body });
+      Store.commit("setFiles", {
+        id: newFileId,
+        file: {
+          file_id: newFileId,
+          file_dir: body.output_dir,
+          file_type: body.file_ext,
+          file_name: body.file_name,
+          file_content: body.content,
+        },
+      });
+      renderComponent(
+        FileBlock({
+          name: body.file_name,
+          id: newFileId,
+          file_id: newFileId,
+          ext: body.file_ext,
+        }),
+        folders[i].id,
+        () => this.initListeners(newFileId)
+      );
+    });
+    this.removeFile(untitledFile.file_id);
+    this.closeDialogModal("directory__select");
+    console.log(selectedFolders);
+  }
+  //run function when the x button is clicked on file view
   private removeFileFromOnView(id: string) {
     const currFileView = LS.getSelectedFile();
     const selectedFile = LS.getFilesOnView().find((i) => i.file_id === id);
+    const isUntitledFile =
+      selectedFile?.file_type === "" &&
+      selectedFile?.file_name.match(/\bUntitled\b/) !== null;
+    if (isUntitledFile) {
+      const allFolders = Object.values(Store.getState.folders);
+      renderComponent(
+        DirectorySelectContainer(),
+        "directory__select-container",
+        () => {
+          selectDomElements(".directory__select .cancel")?.forEach(
+            (i) =>
+              (i.onclick = () => this.closeDialogModal("directory__select"))
+          );
+          (selectDomElement("#confirm") as HTMLButtonElement).onclick = () =>
+            this.saveUntitledFile(selectedFile);
+          allFolders.forEach((i) => {
+            renderComponent(
+              DirectorySelect({
+                name: i.name,
+                dir: i.path,
+                id: i.id,
+              }),
+              "directory__select-wrapper"
+              // () => this.addEventListenerToFiles()
+            );
+          });
+        }
+      );
+      return;
+    }
     if (selectedFile?.modified) {
       if (!selectedFile) return;
       this.viewFile(selectedFile); //display the file to be removed on order for CM to read it's content
@@ -180,15 +275,15 @@ class File {
             "#dialog__ignore__save"
           ) as HTMLButtonElement;
           selectDomElements(".close__dialog")?.forEach(
-            (i) => (i.onclick = this.closeDialogModal)
+            (i) => (i.onclick = () => this.closeDialogModal("dialog__modal"))
           );
           save.onclick = () => {
             this.saveFileChanges(selectedFile);
-            this.closeDialogModal();
+            this.closeDialogModal("dialog__modal");
             this.removeFile(id);
           };
           ignore.onclick = () => {
-            this.closeDialogModal();
+            this.closeDialogModal("dialog__modal");
             this.removeFile(id);
           };
         }
@@ -199,8 +294,22 @@ class File {
     this.removeFile(id);
   }
 
-  private closeDialogModal(): void {
-    selectDomElement("#dialog__modal")?.remove();
+  private closeDialogModal(id: string): void {
+    selectDomElement(`#${id}`)?.remove();
+  }
+
+  private getDoc(id: string): string {
+    let doc = "";
+    CM.getCM[id].getDoc().children.map((i: any) => {
+      i.lines
+        .map((l: any) => l.text)
+        .forEach((x: any) => {
+          doc += x;
+          doc += "\n";
+        });
+      return doc;
+    });
+    return doc;
   }
 
   public async saveFileChanges(file: IFile): Promise<void> {
@@ -209,16 +318,17 @@ class File {
         (i) => i.file_dir === file.file_dir
       ); //use this to get the correct file based on the file path as the file changes on page reload
       if (!CM.getCM) return;
-      let doc = "";
-      CM.getCM[file.file_id].getDoc().children.map((i: any) => {
-        i.lines
-          .map((l: any) => l.text)
-          .forEach((x: any) => {
-            doc += x;
-            doc += "\n";
-          });
-        return doc;
-      });
+      let doc = this.getDoc(file.file_id);
+      // let doc = "";
+      // CM.getCM[file.file_id].getDoc().children.map((i: any) => {
+      //   i.lines
+      //     .map((l: any) => l.text)
+      //     .forEach((x: any) => {
+      //       doc += x;
+      //       doc += "\n";
+      //     });
+      //   return doc;
+      // });
       await req.writeFile({
         file_dir: file.file_dir,
         file_content: doc,
@@ -236,19 +346,25 @@ class File {
     }
   }
 
+  public initListeners(id: string) {
+    const el = selectDomElement(`[id='${id}']`) as HTMLElement;
+    if (!el) return;
+    el.onmousedown = this.handleFileClick;
+
+    el.ondragstart = DND.drag;
+    el.ondragover = DND.dragOver;
+    el.ondrop = DND.dragDrop;
+    el.ondragleave = DND.dragLeave;
+    el.ondragend = DND.dragEnd;
+  }
+
   public addEventListenerToFiles() {
     const allFiles = <HTMLElement[]>(
       Array.from(document.querySelectorAll(".explorer__content-file"))
     );
 
     allFiles.forEach((i) => {
-      i.onmousedown = this.handleFileClick;
-
-      i.ondragstart = DND.drag;
-      i.ondragover = DND.dragOver;
-      i.ondrop = DND.dragDrop;
-      i.ondragleave = DND.dragLeave;
-      i.ondragend = DND.dragEnd;
+      this.initListeners(i.id);
     });
   }
 
@@ -303,17 +419,33 @@ class File {
   }
 
   private newUntitledFile(): void {
-    console.log("open new untitled file");
+    const untitledFiles = LS.getFilesOnView().filter(
+      (i) => i.file_name.includes("Untitled") && i.file_type === ""
+    );
+    const untitledFile: IFile = {
+      file_name: `Untitled- ${untitledFiles.length + 1}`,
+      file_id: uid(),
+      file_dir: state.rootDirPath,
+      file_content: "",
+      file_type: "",
+    };
+    CM.injectCM(untitledFile);
+    this.addFileToFileOnView("", untitledFile);
+    this.addFileToOpenEditors("", untitledFile);
+    LS.setFilesOnView([...LS.getFilesOnView(), untitledFile]);
+    this.viewFile(untitledFile);
   }
 
   private saveAll(): void {
     const unsavedFiles = LS.getFilesOnView().filter(
       (i) => i?.modified === true
     );
-    unsavedFiles.forEach(async (i) => {
-      await this.saveFileChanges(i);
-    });
+    if (unsavedFiles.length)
+      unsavedFiles.forEach(async (i) => {
+        await this.saveFileChanges(i);
+      });
   }
+
   private closeAllEditor(): void {
     LS.setFilesOnView([]);
     LS.setSelectedFile(null);
@@ -333,7 +465,7 @@ class File {
     const saveAllBtn = selectDomElement("#save_all");
     const closeAllBtn = selectDomElement("#close_all_editors");
 
-    newUntitledFileBtn?.addEventListener("click", this.newUntitledFile);
+    newUntitledFileBtn?.addEventListener("click", () => this.newUntitledFile());
     saveAllBtn?.addEventListener("click", () => this.saveAll());
     closeAllBtn?.addEventListener("click", this.closeAllEditor);
   }
@@ -396,7 +528,7 @@ class Folder {
           const res = await req.createDirectory(newDirPath);
           let folderId = uid();
           let folderSplit = newDirPath.split("\\");
-          let folderName = folderSplit[folderSplit.length - 1];
+          let folderName = sanitizeString(folderSplit[folderSplit.length - 1]);
           let index = folderSplit.indexOf(state.rootDirName);
 
           if (index === -1)
@@ -447,7 +579,7 @@ class Folder {
             file: {
               file_content: "",
               file_id: fileId,
-              file_name: fileName,
+              file_name: sanitizeString(fileName),
               file_type: `.${extName}`,
               file_dir: newFilePath
                 ? `${state.rootDirName}\\${newFilePath}\\${fileName}.${extName}`

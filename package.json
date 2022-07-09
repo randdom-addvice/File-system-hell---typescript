@@ -40,6 +40,7 @@
     "codemirror": "^5.57.0",
     "immutable": "^4.1.0",
     "shortid": "^2.2.16",
+    "sweetalert": "^2.1.2",
     "vanilla-ts-store": "^2.4.0"
   },
   "postcss": {

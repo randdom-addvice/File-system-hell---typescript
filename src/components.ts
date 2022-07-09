@@ -35,6 +35,7 @@ import hbs from "./assets/fileIcons/templates/handlebars.svg";
 import next from "./assets/fileIcons/templates/nextjs.svg";
 import nuxt from "./assets/fileIcons/templates/nuxt.svg";
 import vue from "./assets/fileIcons/templates/vue.svg";
+import { IFolder } from "./interfaces/interface";
 
 interface FileView {
   name: string;
@@ -362,6 +363,54 @@ export const DialogModal = (props: { message: string }) => {
         </div>
     </section>
   `;
+};
+
+export const DirectorySelectContainer = () => {
+  return ` 
+  <section class="directory__select" id="directory__select">
+  <div class="directory__select-overlay cancel"></div>
+      <div class="directory__select-container">
+          <h2>Select Directory(s) to add file to</h2>
+          <div class="directory__select-wrapper" id="directory__select-wrapper">
+              
+          </div>
+          <div class="directory__select-footer">
+              <div class="directory__select-footer-container">
+                <div>
+                  <input type="text" placeholder="Enter file name" name="file__name" />
+                </div>
+                <div>
+                  <button id="confirm">Confirm</button>
+                  <button id="cancel" class="cancel">Cancel</button>
+                </div>
+              </div>
+          </div>
+      </div>
+  </section>`;
+};
+export const DirectorySelect = (props: {
+  dir: string;
+  id: string;
+  name: string;
+}) => {
+  return ` 
+    <div title="${props.dir}">
+      <div class="group">
+          <div>
+              <div class="icon">
+                  <i class="fa-solid fa-folder-closed"></i>
+              </div>
+              <div class="name">
+                  <span class="name__wrapper">${props.name}</span>
+              </div>
+          </div>
+          <div>
+              <div class="checkbox__container">
+                  <input type="checkbox" name="directory__select" value="${props.id}">
+              </div>
+          </div>
+      </div>
+  </div>`;
 };
 
 export const TextField = (props: { isFileInput: boolean }) => {
