@@ -169,6 +169,32 @@ class File {
     }
   }
 
+  public renderDialogModalForUntitledFile(selectedFile: IFile) {
+    const allFolders = Object.values(Store.getState.folders);
+    renderComponent(
+      DirectorySelectContainer(),
+      "directory__select-container",
+      () => {
+        selectDomElements(".directory__select .cancel")?.forEach(
+          (i) => (i.onclick = () => this.closeDialogModal("directory__select"))
+        );
+        (selectDomElement("#confirm") as HTMLButtonElement).onclick = () =>
+          this.saveUntitledFile(selectedFile);
+        allFolders.forEach((i) => {
+          renderComponent(
+            DirectorySelect({
+              name: i.name,
+              dir: i.path,
+              id: i.id,
+            }),
+            "directory__select-wrapper"
+            // () => this.addEventListenerToFiles()
+          );
+        });
+      }
+    );
+  }
+
   //run function when confirm button is clicked on modal
   private saveUntitledFile(untitledFile: IFile): void {
     const selectedFolders = Array.from(
@@ -237,30 +263,7 @@ class File {
       selectedFile?.file_type === "" &&
       selectedFile?.file_name.match(/\bUntitled\b/) !== null;
     if (isUntitledFile) {
-      const allFolders = Object.values(Store.getState.folders);
-      renderComponent(
-        DirectorySelectContainer(),
-        "directory__select-container",
-        () => {
-          selectDomElements(".directory__select .cancel")?.forEach(
-            (i) =>
-              (i.onclick = () => this.closeDialogModal("directory__select"))
-          );
-          (selectDomElement("#confirm") as HTMLButtonElement).onclick = () =>
-            this.saveUntitledFile(selectedFile);
-          allFolders.forEach((i) => {
-            renderComponent(
-              DirectorySelect({
-                name: i.name,
-                dir: i.path,
-                id: i.id,
-              }),
-              "directory__select-wrapper"
-              // () => this.addEventListenerToFiles()
-            );
-          });
-        }
-      );
+      this.renderDialogModalForUntitledFile(selectedFile);
       return;
     }
     if (selectedFile?.modified) {
@@ -1360,8 +1363,18 @@ class SearchService extends File {
 CodeMirror.commands.save = () => {
   const file = new File();
   const f = LS.getSelectedFile();
+  const isUntitledFile =
+    f?.file_type === "" && f?.file_name.match(/\bUntitled\b/) !== null;
+  if (isUntitledFile) {
+    file.renderDialogModalForUntitledFile(f);
+    return;
+  }
   file.saveFileChanges(f);
   CM.updateFileOnType(false, f);
+  swal({
+    title: "File saved",
+    timer: 1500,
+  });
 };
 
 export { File, Folder };

@@ -1037,6 +1037,13 @@ body {
 span.name {
   font-size: 0.8rem;
 }
+// swal
+.swal-overlay {
+  background-color: rgba(213, 213, 213, 0.45);
+}
+.swal-modal {
+  border: 2px solid $primary-color;
+}
 //CodeMirror
 #file__content {
   border-top: 1px solid;
