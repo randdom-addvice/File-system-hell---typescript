@@ -1096,11 +1096,18 @@ class SearchService extends File {
         .filter((i) => i !== undefined) as IFile[] | [];
       this.matchedFiles = matchedFiles;
     } else {
-      const indexes = caseSensitive.filter((i) => i !== -1 && i !== undefined);
-      const matchedFiles = indexes.map((index) => {
-        const foundIndex = caseSensitive.findIndex((i) => i === index);
-        return includedFiles[foundIndex];
-      });
+      // const indexes = caseSensitive.filter((i) => i !== -1 && i !== undefined);
+      // const matchedFiles = indexes.map((index) => {
+      //   const foundIndex = caseSensitive.findIndex((i) => i === index);
+      //   return includedFiles[foundIndex];
+      // });
+      const matchedFiles = caseSensitive
+        .map((i, index) => {
+          let matched: IFile[] = [];
+          if (i !== -1 && i !== undefined) matched.push(includedFiles[index]);
+          return matched[0];
+        })
+        .filter((i) => i);
       this.matchedFiles = matchedFiles;
     }
     if (this.useRegex) {
@@ -1118,6 +1125,7 @@ class SearchService extends File {
     const message: string = this.matchedFiles.length ? "" : this.noResultMsg;
     const matchedLines: { file: IFile; lines: string[] }[] = [];
     this.messageContainer.textContent = message;
+    // console.log(this.matchedFiles);
     this.matchedFiles.forEach((i, index, array) => {
       const lines = i.file_content.split("\n");
       let t: string[] = [];
