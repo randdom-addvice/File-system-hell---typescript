@@ -73,29 +73,31 @@ class File {
   private handleFileClick(e: MouseEvent): void {
     e.stopPropagation();
     const currentTarget = e.currentTarget as HTMLElement;
-    state.isFolderSelected = currentTarget.dataset.type === "folder";
-    state.currentIdTarget = currentTarget.dataset.file_id!;
-    const file = Store.getState.files[state.currentIdTarget];
-    const isExist = LS.getFilesOnView().find(
-      (i) => i.file_dir === file.file_dir
-    );
-    if (!file || isExist) return; //if file do not exist or already on view
-    this.addFileToFileOnView(state.currentIdTarget, file);
-    this.addFileToOpenEditors(state.currentIdTarget, file);
+    if (e.button === 0) {
+      state.isFolderSelected = currentTarget.dataset.type === "folder";
+      state.currentIdTarget = currentTarget.dataset.file_id!;
+      const file = Store.getState.files[state.currentIdTarget];
+      const isExist = LS.getFilesOnView().find(
+        (i) => i.file_dir === file.file_dir
+      );
+      if (!file || isExist) return; //if file do not exist or already on view
+      this.addFileToFileOnView(state.currentIdTarget, file);
+      this.addFileToOpenEditors(state.currentIdTarget, file);
 
-    Store.commit("addFileToFileOnView", file);
-    Store.commit("setSelectedFile", file);
-    LS.setFilesOnView([...LS.getFilesOnView(), file]);
-    //create a new DOM element to inject CodeMirror into
-    const fileEditorContainer = document.getElementById(
-      "file__content"
-    ) as HTMLElement;
-    const editorHTML = `<div data-editor_cm_id=${file.file_id} id="cm-${file.file_id}" class="tab-pane d-none"></div>`;
-    fileEditorContainer.innerHTML += editorHTML;
-    CM.injectCM(file);
-    this.viewFile(file);
-    let folder = new Folder();
+      Store.commit("addFileToFileOnView", file);
+      Store.commit("setSelectedFile", file);
+      LS.setFilesOnView([...LS.getFilesOnView(), file]);
+      //create a new DOM element to inject CodeMirror into
+      const fileEditorContainer = document.getElementById(
+        "file__content"
+      ) as HTMLElement;
+      const editorHTML = `<div data-editor_cm_id=${file.file_id} id="cm-${file.file_id}" class="tab-pane d-none"></div>`;
+      fileEditorContainer.innerHTML += editorHTML;
+      CM.injectCM(file);
+      this.viewFile(file);
+    }
     if (e.button === 2) {
+      let folder = new Folder();
       state.isFolderSelected = false; //currentTarget.dataset.type === "folder"; //set the "isFolderSelected" property on the Folder class to be used in the "deleteFolderOrFile method"
       folder.showDropDownContext(currentTarget.dataset.file_id!);
     }
@@ -346,28 +348,6 @@ class File {
     }
   }
 
-  public initListeners(id: string) {
-    const el = selectDomElement(`[id='${id}']`) as HTMLElement;
-    if (!el) return;
-    el.onmousedown = this.handleFileClick;
-
-    el.ondragstart = DND.drag;
-    el.ondragover = DND.dragOver;
-    el.ondrop = DND.dragDrop;
-    el.ondragleave = DND.dragLeave;
-    el.ondragend = DND.dragEnd;
-  }
-
-  public addEventListenerToFiles() {
-    const allFiles = <HTMLElement[]>(
-      Array.from(document.querySelectorAll(".explorer__content-file"))
-    );
-
-    allFiles.forEach((i) => {
-      this.initListeners(i.id);
-    });
-  }
-
   public checkForFilesInDirectories(folder: IFolder) {
     folder.files?.forEach(async (i) => {
       i.file_id = uid();
@@ -457,6 +437,29 @@ class File {
         first.remove();
         first = e.firstElementChild;
       }
+    });
+  }
+
+  public initListeners(id: string) {
+    const el = selectDomElement(`[id='${id}']`) as HTMLElement;
+    if (!el) return;
+    el.onmousedown = (e: MouseEvent) => e.stopPropagation(); //prevent event propagation initially on mousedown
+    el.onclick = this.handleFileClick;
+
+    el.ondragstart = DND.drag;
+    el.ondragover = DND.dragOver;
+    el.ondrop = DND.dragDrop;
+    el.ondragleave = DND.dragLeave;
+    el.ondragend = DND.dragEnd;
+  }
+
+  public addEventListenerToFiles() {
+    const allFiles = <HTMLElement[]>(
+      Array.from(document.querySelectorAll(".explorer__content-file"))
+    );
+
+    allFiles.forEach((i) => {
+      this.initListeners(i.id);
     });
   }
 
