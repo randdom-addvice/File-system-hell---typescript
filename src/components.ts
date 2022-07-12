@@ -165,12 +165,15 @@ export const FileBlock = (props: {
   id: string;
   ext: string;
   file_id: string;
+  show?: boolean;
 }) => {
   const { name, id, file_id, ext } = props;
   return `
     <div draggable="true" title=${
       props.name
-    } class="explorer__content-file nested" data-type="file" id=${id} data-file_id=${file_id}>
+    } class="explorer__content-file nested ${
+    props?.show ? "d-none" : ""
+  }" data-type="file" id=${id} data-file_id=${file_id}>
       <div class="explorer__content-file-group">
         <div class="explorer__content-folder-arrow"></div>
         <div class="explorer__content-folder-icon">

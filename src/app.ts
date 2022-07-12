@@ -222,6 +222,7 @@ class File {
     }
 
     selectedFolders.forEach(async (i) => {
+      const containerFolder = document.getElementById(folders[i].id);
       const body = {
         output_dir: folders[i].path,
         file_name: sanitizeString(fileName.value.split(".")[0]),
@@ -246,6 +247,7 @@ class File {
           id: newFileId,
           file_id: newFileId,
           ext: body.file_ext,
+          show: !!containerFolder?.classList.contains("d-none"),
         }),
         folders[i].id,
         () => this.initListeners(newFileId)
@@ -253,7 +255,6 @@ class File {
     });
     this.removeFile(untitledFile.file_id);
     this.closeDialogModal("directory__select");
-    console.log(selectedFolders);
   }
   //run function when the x button is clicked on file view
   private removeFileFromOnView(id: string) {
@@ -443,7 +444,7 @@ class File {
     });
   }
 
-  public initListeners(id: string) {
+  public initListeners(id: string): void {
     const el = selectDomElement(`[id='${id}']`) as HTMLElement;
     if (!el) return;
     el.onmousedown = (e: MouseEvent) => e.stopPropagation(); //prevent event propagation initially on mousedown
@@ -456,7 +457,7 @@ class File {
     el.ondragend = DND.dragEnd;
   }
 
-  public addEventListenerToFiles() {
+  public addEventListenerToFiles(): void {
     const allFiles = <HTMLElement[]>(
       Array.from(document.querySelectorAll(".explorer__content-file"))
     );
@@ -594,7 +595,7 @@ class Folder {
           });
           renderComponent(
             FileBlock({
-              name: fileName,
+              name: `${fileName}.${extName}`,
               id: fileId,
               file_id: fileId,
               ext: `.${extName}`,
@@ -610,6 +611,20 @@ class Folder {
       if (e.key === "Escape" || e.code === "Escape")
         unmountComponent("explorer__content-input");
     } catch (error) {
+      let err = error as AxiosError;
+      if (error instanceof Error && err.response) {
+        if (
+          err.response.status === 500 &&
+          (err.response.data as any).message === "File already exist"
+        ) {
+          textFieldContainer.insertAdjacentHTML(
+            "beforeend",
+            TextFieldErrorMessage({
+              message: "File already exist",
+            })
+          );
+        }
+      }
       console.log(error);
     }
   }
