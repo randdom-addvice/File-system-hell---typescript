@@ -984,7 +984,7 @@ body {
     }
 
     button {
-      margin-left: 1rem;
+      margin-left: 0.4rem;
       padding: 0.3rem 0.2rem;
       border-radius: 3px;
       border-width: 1px;
@@ -1018,6 +1018,11 @@ body {
     margin-top: 0.5rem;
     margin-left: 0.5rem;
     display: block !important;
+  }
+}
+.file__content {
+  &--hover {
+    background-color: $md-grey;
   }
 }
 
@@ -1062,8 +1067,20 @@ span.name {
   padding-top: 0.1rem !important;
   padding-bottom: 0.1rem !important;
 }
+.CodeMirror-scroll,
+.CodeMirror-sizer,
+.CodeMirror-gutter,
+.CodeMirror-gutters,
+.CodeMirror-linenumber {
+  -moz-box-sizing: content-box;
+  box-sizing: content-box;
+  font-family: $font-Roboto;
+  font-size: 13px;
+  letter-spacing: 1px;
+}
 #file__content {
   position: relative;
+  min-height: 100vh;
 }
 .e {
   border: 2px solid;

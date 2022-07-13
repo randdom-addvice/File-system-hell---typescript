@@ -384,6 +384,7 @@ export const DirectorySelectContainer = () => {
                 </div>
                 <div>
                   <button id="confirm">Confirm</button>
+                  <button id="do_not_save" class="cancel">Don't save</button>
                   <button id="cancel" class="cancel">Cancel</button>
                 </div>
               </div>

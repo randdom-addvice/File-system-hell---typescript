@@ -68,6 +68,30 @@ class File {
     this.checkForFilesInDirectories =
       this.checkForFilesInDirectories.bind(this);
     this.handleFileClick = this.handleFileClick.bind(this);
+    this.handleFileClickOnLeftClick =
+      this.handleFileClickOnLeftClick.bind(this);
+  }
+
+  public handleFileClickOnLeftClick(id: string): void {
+    const file = Store.getState.files[id];
+    const isExist = LS.getFilesOnView().find(
+      (i) => i.file_dir === file.file_dir
+    );
+    if (!file || isExist) return; //if file do not exist or already on view
+    this.addFileToFileOnView(id, file);
+    this.addFileToOpenEditors(id, file);
+
+    Store.commit("addFileToFileOnView", file);
+    Store.commit("setSelectedFile", file);
+    LS.setFilesOnView([...LS.getFilesOnView(), file]);
+    //create a new DOM element to inject CodeMirror into
+    const fileEditorContainer = document.getElementById(
+      "file__content"
+    ) as HTMLElement;
+    const editorHTML = `<div data-editor_cm_id=${file.file_id} id="cm-${file.file_id}" class="tab-pane d-none"></div>`;
+    fileEditorContainer.innerHTML += editorHTML;
+    CM.injectCM(file);
+    this.viewFile(file);
   }
 
   private handleFileClick(e: MouseEvent): void {
@@ -76,25 +100,7 @@ class File {
     if (e.button === 0) {
       state.isFolderSelected = currentTarget.dataset.type === "folder";
       state.currentIdTarget = currentTarget.dataset.file_id!;
-      const file = Store.getState.files[state.currentIdTarget];
-      const isExist = LS.getFilesOnView().find(
-        (i) => i.file_dir === file.file_dir
-      );
-      if (!file || isExist) return; //if file do not exist or already on view
-      this.addFileToFileOnView(state.currentIdTarget, file);
-      this.addFileToOpenEditors(state.currentIdTarget, file);
-
-      Store.commit("addFileToFileOnView", file);
-      Store.commit("setSelectedFile", file);
-      LS.setFilesOnView([...LS.getFilesOnView(), file]);
-      //create a new DOM element to inject CodeMirror into
-      const fileEditorContainer = document.getElementById(
-        "file__content"
-      ) as HTMLElement;
-      const editorHTML = `<div data-editor_cm_id=${file.file_id} id="cm-${file.file_id}" class="tab-pane d-none"></div>`;
-      fileEditorContainer.innerHTML += editorHTML;
-      CM.injectCM(file);
-      this.viewFile(file);
+      this.handleFileClickOnLeftClick(state.currentIdTarget);
     }
     if (e.button === 2) {
       let folder = new Folder();
@@ -169,7 +175,12 @@ class File {
     }
   }
 
-  public renderDialogModalForUntitledFile(selectedFile: IFile) {
+  private removeUntitledFile(id: string): void {
+    this.removeFile(id);
+    this.closeDialogModal("directory__select");
+  }
+
+  public renderDialogModalForUntitledFile(selectedFile: IFile): void {
     const allFolders = Object.values(Store.getState.folders);
     renderComponent(
       DirectorySelectContainer(),
@@ -180,6 +191,8 @@ class File {
         );
         (selectDomElement("#confirm") as HTMLButtonElement).onclick = () =>
           this.saveUntitledFile(selectedFile);
+        (selectDomElement("#do_not_save") as HTMLButtonElement).onclick = () =>
+          this.removeUntitledFile(selectedFile.file_id);
         allFolders.forEach((i) => {
           renderComponent(
             DirectorySelect({
@@ -856,12 +869,20 @@ class Folder {
     const refreshFolderBtn = selectDomElement("#refresh__folders");
     const explorerContainer = selectDomElement(".explorer__content");
     const searchContainer = selectDomElement("#search__container");
+    const editorContainer = selectDomElement("#file__content");
 
     trashZone?.addEventListener("dragover", DND.trashZoneDragOver);
     trashZone?.addEventListener("drop", DND.dropInTrash);
     trashZone?.addEventListener("dragleave", () =>
       trashZone?.classList.remove("delete__zone--over--dashed")
     );
+    //editor
+    editorContainer?.addEventListener("dragover", DND.editorHover);
+    editorContainer?.addEventListener("dragleave", DND.editorHoverLeave);
+    editorContainer?.addEventListener("drop", (e: DragEvent) =>
+      DND.onEditorFileDrop(e, file.handleFileClickOnLeftClick)
+    );
+    // editorContainer?.addEventListener("click", () => alert("cj"));
 
     // explorerContainer.addEventListener("mousedown", (e: Event) => {
     //   const target = e.target as Element;

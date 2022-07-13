@@ -37,6 +37,7 @@ class DnD {
       });
   }
 
+  //FILE / FOLDER
   public drag(e: DragEvent): void {
     e.stopPropagation();
     console.log("kk");
@@ -47,6 +48,10 @@ class DnD {
     this.trashZone.classList.add("delete__zone--over");
     this.selectedId =
       currentTarget.dataset.folder_id! || currentTarget.dataset.file_id!; //set the id of the selected folder or file to be used for further operation
+    // e.dataTransfer?.setData(
+    //   "text/plain",
+    //   JSON.stringify(currentTarget.dataset || "")
+    // );
   }
 
   public dragLeave(e: any): void {
@@ -127,7 +132,7 @@ class DnD {
     this.trashZone?.classList.remove("delete__zone--over");
   }
 
-  //trashZone
+  //TRASH ZONE
   public trashZoneDragOver(e: DragEvent): void {
     e.preventDefault();
     this.trashZone?.classList.add("delete__zone--over--dashed");
@@ -153,6 +158,28 @@ class DnD {
       alert("OOPS! an error occurred");
     }
     e.preventDefault();
+  }
+
+  //EDITOR
+  public editorHover(e: DragEvent): void {
+    const currentTarget = e.currentTarget as HTMLElement;
+    e.preventDefault();
+    currentTarget.classList.add("file__content--hover");
+    console.log("e.currentTarget");
+  }
+  public editorHoverLeave(e: any): void {
+    e.currentTarget.classList.remove("file__content--hover");
+  }
+
+  public onEditorFileDrop(e: DragEvent, cb: (id: string) => void): void {
+    const { files } = Store.getState;
+    const file = files[this.selectedId || ""];
+    if (this.type !== "file" && !file && !this.selectedId) return;
+    console.log(this.type);
+    // console.log(this.selectedId);
+    // console.log(file);
+    // console.log(cb);
+    cb(this.selectedId || "");
   }
 }
 
