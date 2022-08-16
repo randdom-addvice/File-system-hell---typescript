@@ -364,22 +364,30 @@ class File {
       alert("OOps an error occurred");
     }
   }
+  public addFilesToDirectory(
+    file: IFile,
+    folderId: string,
+    show: boolean
+  ): void {
+    file.file_id = uid();
+    file.modified = false;
+    renderComponent(
+      FileBlock({
+        name: file.file_name,
+        id: file.file_id,
+        file_id: file.file_id,
+        ext: file.file_type,
+        show,
+      }),
+      folderId
+    );
+    this.addEventListenerToFiles();
+    Store.commit("setFiles", { id: file.file_id, file: file });
+  }
 
   public checkForFilesInDirectories(folder: IFolder) {
     folder.files?.forEach(async (i) => {
-      i.file_id = uid();
-      i.modified = false;
-      renderComponent(
-        FileBlock({
-          name: i.file_name,
-          id: i.file_id,
-          file_id: i.file_id,
-          ext: i.file_type,
-        }),
-        folder.id
-      );
-      this.addEventListenerToFiles();
-      Store.commit("setFiles", { id: i.file_id, file: i });
+      this.addFilesToDirectory(i, folder.id, true);
     });
   }
 
@@ -808,6 +816,94 @@ class Folder {
     }
   };
 
+  /**
+   * derive the path from current iteration path based on the index of the rootPathName in the splitted array
+   * e.g:
+   * if path = C:\\Users\\HP\\Documents\\NODEJS PROJECTS\\File system\\myFiles\\allDocs\\nested;
+   * then: derivedPath = [allDocs, nested]
+   */
+  private async addFileToDirectory(directory: IFolder) {
+    let selectedFolder = directory.path.split("\\");
+    let pathIndex = selectedFolder.indexOf(state.rootDirName);
+    let newFilePath = selectedFolder.slice(pathIndex + 1).join("/");
+    const res = await req.getFileInDirectory(newFilePath);
+
+    if (res.data.files?.length) {
+      //check if folder has files in it and add it to the current iteration(directory)
+      // Object.assign({}, directory, { files: res.data.files }); // directory.files = res.data.files(doesn't work in strict mode)
+      directory.files = res.data.files;
+      let file = new File();
+
+      file.checkForFilesInDirectories(directory);
+      // file.addEventListenerToFiles();
+      this.addEventListenersToFolders();
+      this.collapseAllFolders();
+    }
+  }
+
+  private async checkForSubFolders(dir: IFolder) {
+    if (dir.child) {
+      dir.child.forEach(async (i) => {
+        i.id = uid();
+        renderComponent(
+          FolderBlock({ folder_name: i.name, id: i.id, nested: "nested" }),
+          `${dir.id}`
+        ); //add a nested folder inside of the parent
+        Store.commit("setFolders", { id: i.id, dir: i });
+        this.addFileToDirectory(i);
+        if (i.child && i.child.length) this.checkForSubFolders(i); //check if subfolder also has a child the re-run function
+      });
+    }
+  }
+
+  private collapseAllFolders() {
+    const nestedBlocks = <HTMLElement[]>(
+      Array.from(document.querySelectorAll(".nested"))
+    );
+    nestedBlocks.forEach((el) => el.classList.add("d-none"));
+    unmountComponent("loading-spinner");
+  }
+
+  public async handleFolderCreation() {
+    try {
+      let {
+        data: { directories, root_dir },
+      } = await req.getDirectories();
+      // const rootDirFiles = await req.getFileInDirectory(root_dir);
+      // console.log(rootDirFiles);
+      state.rootDirPath = root_dir;
+      state.rootDirName = root_dir.split("\\").slice(-1)[0]; //.pop();
+
+      //wait for the foreach to run before moving to next function call
+      let wait: Promise<void> = new Promise((resolve) => {
+        directories.forEach(async (dir, index, array) => {
+          dir.id = uid();
+          Store.commit("setFolders", { id: dir.id, dir });
+          renderComponent(
+            FolderBlock({ folder_name: dir.name, id: dir.id }),
+            "folder-container"
+          ); //render all directories in the root directory
+
+          this.addFileToDirectory(dir);
+          this.checkForSubFolders(dir);
+          if (index === array.length - 1) resolve();
+        });
+      });
+      await wait;
+      const rootDirFiles = await req.getFileInDirectory("/");
+      const file = new File();
+      rootDirFiles.data.files.forEach((i) => {
+        file.addFilesToDirectory(i, "folder-container", false);
+      });
+      this.addEventListenersToFolders();
+    } catch (error) {
+      console.log(error);
+      swal({
+        title: "Oops an error occurred",
+      });
+    }
+  }
+
   private addEventListenerToContextDropdown(): void {
     let deleteBtn = selectDomElement("#delete");
     let renameBtn = selectDomElement("#rename");
@@ -933,84 +1029,6 @@ class Folder {
     });
     searchService.addListeners();
     file.addGlobalListeners();
-  }
-
-  /**
-   * derive the path from current iteration path based on the index of the rootPathName in the splitted array
-   * e.g:
-   * if path = C:\\Users\\HP\\Documents\\NODEJS PROJECTS\\File system\\myFiles\\allDocs\\nested;
-   * then: derivedPath = [allDocs, nested]
-   */
-  private async addFileToDirectory(directory: IFolder) {
-    let selectedFolder = directory.path.split("\\");
-    let pathIndex = selectedFolder.indexOf(state.rootDirName);
-    let newFilePath = selectedFolder.slice(pathIndex + 1).join("/");
-    const res = await req.getFileInDirectory(newFilePath);
-
-    if (res.data.files?.length) {
-      //check if folder has files in it and add it to the current iteration(directory)
-      // Object.assign({}, directory, { files: res.data.files }); // directory.files = res.data.files(doesn't work in strict mode)
-      directory.files = res.data.files;
-      let file = new File();
-
-      file.checkForFilesInDirectories(directory);
-      // file.addEventListenerToFiles();
-      this.addEventListenersToFolders();
-      this.collapseAllFolders();
-    }
-  }
-
-  private async checkForSubFolders(dir: IFolder) {
-    if (dir.child) {
-      dir.child.forEach(async (i) => {
-        i.id = uid();
-        renderComponent(
-          FolderBlock({ folder_name: i.name, id: i.id, nested: "nested" }),
-          `${dir.id}`
-        ); //add a nested folder inside of the parent
-        Store.commit("setFolders", { id: i.id, dir: i });
-        this.addFileToDirectory(i);
-        if (i.child && i.child.length) this.checkForSubFolders(i); //check if subfolder also has a child the re-run function
-      });
-    }
-  }
-
-  private collapseAllFolders() {
-    const nestedBlocks = <HTMLElement[]>(
-      Array.from(document.querySelectorAll(".nested"))
-    );
-    nestedBlocks.forEach((el) => el.classList.add("d-none"));
-    unmountComponent("loading-spinner");
-  }
-
-  public async handleFolderCreation() {
-    try {
-      let {
-        data: { directories, root_dir },
-      } = await req.getDirectories();
-      state.rootDirPath = root_dir;
-      state.rootDirName = root_dir.split("\\").slice(-1)[0]; //.pop();
-
-      //wait for the foreach to run before moving to next function call
-      let wait: Promise<void> = new Promise((resolve) => {
-        directories.forEach(async (dir, index, array) => {
-          dir.id = uid();
-          Store.commit("setFolders", { id: dir.id, dir });
-          renderComponent(
-            FolderBlock({ folder_name: dir.name, id: dir.id }),
-            "folder-container"
-          ); //render all directories in the root directory
-
-          this.addFileToDirectory(dir);
-          this.checkForSubFolders(dir);
-          if (index === array.length - 1) resolve();
-        });
-      });
-      await wait;
-      this.addEventListenersToFolders();
-    } catch (error) {
-      console.log(error);
-    }
   }
 
   protected handleFolderHover(): void {
