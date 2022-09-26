@@ -1,0 +1,9 @@
+openapi: "3.0.0"
+info:
+  description: "A REST API for the File System App!"
+  version: "1.0.0"
+  title: "File System"
+basePath: "/api"
+servers:
+  url: "http://localhost:5000/api"
+  description: "Development server"

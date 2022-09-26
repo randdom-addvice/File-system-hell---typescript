@@ -1,0 +1,4 @@
+{
+  "ignore": ["myFiles/*", "*.json", "client/*"],
+  "ext": ".js, .mjs, .coffee, .litcoffee, .json, .yaml, .ts, .md, .html"
+}
