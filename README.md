@@ -1,5 +1,5 @@
 # File system hell
-A project to showcase the use of file-system and an attempt to clone vs-code basic editor functionalities.
+A project to showcase the use of file-system and an attempt to clone vs-code basic editor functionalities using.
 
 ## Functionality:
 
@@ -13,7 +13,7 @@ Currently the app is enabled to do the following:
 ## Technologies
 
 - NodeJs
-- Typescript
+- Typescript (vanilla typescript F.E)
 - Node JS
 
 ```javascript
