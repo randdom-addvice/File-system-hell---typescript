@@ -15,8 +15,6 @@ export const selectDomElements = (
   return document.querySelectorAll(element);
 };
 
-export const sanitizeString = (str: string): string =>
-  str.replace(/[`~!@#$%^&*()_|+\-=?;:'",<>\{\}\[\]\\\/]/gi, "");
 export const attachEvent = (
   element: Element,
   eventName: string,

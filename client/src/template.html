@@ -53,13 +53,13 @@
                                         <div class="file__namef">Open Editors</div>
                                     </div>
                                     <ul class="d-none">
-                                        <li class="add__file" id="new_untitled_file" title="New untitled file">
+                                        <li class="add__file" title="New untitled file">
                                             <span><i class="fa-solid fa-file-circle-plus"></i></span>
                                         </li>
-                                        <li class="save_all" id="save_all" title="save all">
+                                        <li class="refresh" title="save all">
                                             <span><i class="fa-solid fa-sd-card"></i></span>
                                         </li>
-                                        <li class="close" id="close_all_editors" title="Close all editors">
+                                        <li class="close" title="Close all editors">
                                             <span><i class="fa-solid fa-file-circle-xmark"></i></span>
                                         </li>
                                     </ul>
@@ -183,122 +183,49 @@
 
                             </nav>
                         </header>
-                        <div class="file__content" id="file__content" draggable="true"></div>
+                        <div id="file__content"></div>
                         <div id="modal"></div>
-                        <div id="directory__select-container"></div>
                         <!-- <h4 class="placeholder" contenteditable="true">Feature coming soon🙂</h4> -->
                     </div>
                 </section>
             </div>
-            <div class="delete__zone" id="trash__zone">
+            <div class="delete__zone" id="trash__zone" draggable="true">
                 <div class="delete__zone-container">
                     <span><i class="fa-solid fa-trash"></i></span>
 
                 </div>
             </div>
-            <!-- <div class="directory__select-overlay"></div>
-            <section class="directory__select" id="directory__select">
-                <div class="directory__select-container">
-                    <h2>Select Directory(s) to add file to</h2>
-                    <div class="directory__select-wrapper">
-                        <div draggable="true">
-                            <div class="group">
-                                <div>
-                                    <div class="arrow">
-                                        <span>
-                                            <i class="fa-solid fa-angle-right"></i>
-                                        </span>
-                                    </div>
-                                    <div class="icon">
-                                        <i class="fa-solid fa-folder-closed"></i>
-                                    </div>
-                                    <div class="name">
-                                        <span class="name__wrapper">AllDocs</span>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="checkbox__container">
-                                        <input type="checkbox" id="">
-                                    </div>
-                                </div>
-                            </div>
+        </main>
+        <!-- <section class="dialog" id="dialog__modal">
+            <div class="dialog__modal-overlay"></div>
+            <div class="dialog__modal">
+                <div class="dialog__modal-container">
+                    <div class="dialog__modal-header">
+                        <h4 class="warning">Warning ⚠</h4>
+                        <button class="cancel">X</button>
+                    </div>
+                    <div class="dialog__modal-content">
+                        <div class="dialog__modal-message">
+                            <p>Do you want to save the changes you made to index.ts?</p>
                         </div>
-                        <div draggable="true">
-                            <div class="group">
-                                <div>
-                                    <div class="arrow">
-                                        <span>
-                                            <i class="fa-solid fa-angle-right"></i>
-                                        </span>
-                                    </div>
-                                    <div class="icon">
-                                        <i class="fa-solid fa-folder-closed"></i>
-                                    </div>
-                                    <div class="name">
-                                        <span class="name__wrapper">AllDocs</span>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="checkbox__container">
-                                        <input type="checkbox" id="">
-                                    </div>
-                                </div>
-                            </div>
-                            <div draggable="true" class="nested">
-                                <div class="group">
-                                    <div>
-                                        <div class="arrow">
-                                            <span>
-                                                <i class="fa-solid fa-angle-right"></i>
-                                            </span>
-                                        </div>
-                                        <div class="icon">
-                                            <i class="fa-solid fa-folder-closed"></i>
-                                        </div>
-                                        <div class="name">
-                                            <span class="name__wrapper">AllDocs</span>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div class="checkbox__container">
-                                            <input type="checkbox" id="">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div draggable="true">
-                            <div class="group">
-                                <div>
-                                    <div class="arrow">
-                                        <span>
-                                            <i class="fa-solid fa-angle-right"></i>
-                                        </span>
-                                    </div>
-                                    <div class="icon">
-                                        <i class="fa-solid fa-folder-closed"></i>
-                                    </div>
-                                    <div class="name">
-                                        <span class="name__wrapper">AllDocs</span>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="checkbox__container">
-                                        <input type="checkbox" id="">
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="dialog__modal-subMessage">
+                            <p>Your changes will be lost if you don't save them.</p>
                         </div>
                     </div>
-                    <div class="directory__select-footer">
-                        <div class="directory__select_-footer-container">
-                            <button id="confirm">Confirm</button>
-                            <button id="cancel">Cancel</button>
+                    <div class="dialog__modal-footer">
+                        <div class="dialog__modal-footer-container">
+                            <div class="action__buttons">
+                                <div class="action__buttons-container">
+                                    <button id="dialog__save">save</button>
+                                    <button id="dialog__ignore__save">Don't Save</button>
+                                    <button>cancel</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </section> -->
-        </main>
+            </div>
+        </section> -->
     </div>
 </body>
 

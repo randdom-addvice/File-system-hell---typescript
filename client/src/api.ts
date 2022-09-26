@@ -2,7 +2,7 @@ import axios, { AxiosResponse } from "axios";
 import { IFile, IFolder } from "./interfaces/interface";
 
 const req = axios.create({
-  baseURL: "https://file-system-api-v1.herokuapp.com/api",
+  baseURL: "http://localhost:5000/api",
   timeout: 0,
   headers: {
     Accept: "application/vnd.GitHub.v3+json",

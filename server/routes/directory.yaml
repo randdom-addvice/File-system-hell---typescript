@@ -1,0 +1,108 @@
+components:
+  schemas:
+    Directory:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Directory name.
+          example: C:\\Users\\HP\\Documents\\NODEJS PROJECTS\\File system\\myFiles\\allDocs
+        path:
+          type: string
+          description: Path to the directory.
+          example: example.json
+        child:
+          type: array
+          description: nested directories.
+          example: .json
+
+paths:
+  /directories:
+    get:
+      tags:
+        - Directories
+      summary: Deeply retrieve all files in a directory including all nested directories.
+      responses:
+        200:
+          description: all directories received successfully.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Directory"
+        400:
+          description: Bad request.
+  /directories/create:
+    post:
+      tags:
+        - Directories
+      summary: Create a new directory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                new_directory:
+                  type: string
+                  default: "acceptedDocs/nested"
+                  required: true
+      responses:
+        201:
+          description: directory created.
+        500:
+          description: internal server error.
+        404:
+          description: error in creating directory.
+  /directories/rename:
+    patch:
+      tags:
+        - Directories
+      summary: Rename a directory.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                old_file_path:
+                  type: string
+                  default: "C:\\Users\\HP\\Documents\\NODEJS PROJECTS\\File system\\myFiles\\acceptedDocs"
+                  required: true
+                new_directory_name:
+                  type: string
+                  default: "acceptedDoc"
+                  required: true
+      responses:
+        200:
+          description: directory renamed.
+        500:
+          description: internal server error.
+        404:
+          description: error renaming directory.
+  /directories/delete:
+    delete:
+      tags:
+        - Directories
+      summary: Delete a directory.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                directory:
+                  type: string
+                  default: "C:\\Users\\HP\\Documents\\NODEJS PROJECTS\\File system\\myFiles\\acceptedDocs"
+                  required: true
+      responses:
+        204:
+          description: directory deleted.
+        500:
+          description: internal server error.
+        404:
+          description: error deleting directory

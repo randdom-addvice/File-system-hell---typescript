@@ -15,8 +15,6 @@ import {
 import {
   BackdropWithSpinner,
   DialogModal,
-  DirectorySelect,
-  DirectorySelectContainer,
   DropDownContext,
   FileBlock,
   FileView,
@@ -32,12 +30,10 @@ import {
 import {
   attachEvent,
   deleteDomElement,
-  sanitizeString,
   selectDomElement,
   selectDomElements,
 } from "./utils";
 import { AxiosError } from "axios";
-import swal from "sweetalert";
 import CodeMirrorManager from "./cm";
 import UseLocalStorage from "./useLocalStorage";
 const req = new API();
@@ -68,22 +64,23 @@ class File {
     this.checkForFilesInDirectories =
       this.checkForFilesInDirectories.bind(this);
     this.handleFileClick = this.handleFileClick.bind(this);
-    this.handleFileClickOnLeftClick =
-      this.handleFileClickOnLeftClick.bind(this);
   }
 
-  public handleFileClickOnLeftClick(id: string): void {
-    const file = Store.getState.files[id];
+  private handleFileClick(e: MouseEvent): void {
+    e.stopPropagation();
+    const currentTarget = e.currentTarget as HTMLElement;
+    state.isFolderSelected = currentTarget.dataset.type === "folder";
+    state.currentIdTarget = currentTarget.dataset.file_id!;
+    const file = Store.getState.files[state.currentIdTarget];
     const isExist = LS.getFilesOnView().find(
       (i) => i.file_dir === file.file_dir
     );
     if (!file || isExist) return; //if file do not exist or already on view
-    this.addFileToFileOnView(id, file);
-    this.addFileToOpenEditors(id, file);
+    this.addFileToFileOnView(state.currentIdTarget, file);
+    this.addFileToOpenEditors(state.currentIdTarget, file);
 
     Store.commit("addFileToFileOnView", file);
     Store.commit("setSelectedFile", file);
-    LS.setFilesOnView([...LS.getFilesOnView(), file]);
     //create a new DOM element to inject CodeMirror into
     const fileEditorContainer = document.getElementById(
       "file__content"
@@ -92,18 +89,8 @@ class File {
     fileEditorContainer.innerHTML += editorHTML;
     CM.injectCM(file);
     this.viewFile(file);
-  }
-
-  private handleFileClick(e: MouseEvent): void {
-    e.stopPropagation();
-    const currentTarget = e.currentTarget as HTMLElement;
-    if (e.button === 0) {
-      state.isFolderSelected = currentTarget.dataset.type === "folder";
-      state.currentIdTarget = currentTarget.dataset.file_id!;
-      this.handleFileClickOnLeftClick(state.currentIdTarget);
-    }
+    let folder = new Folder();
     if (e.button === 2) {
-      let folder = new Folder();
       state.isFolderSelected = false; //currentTarget.dataset.type === "folder"; //set the "isFolderSelected" property on the Folder class to be used in the "deleteFolderOrFile method"
       folder.showDropDownContext(currentTarget.dataset.file_id!);
     }
@@ -112,6 +99,7 @@ class File {
   public viewFile(file: IFile): void {
     Store.commit("setSelectedFile", file);
     LS.setSelectedFile(file);
+    LS.setFilesOnView(Store.getState.filesOnView);
     this.showEditor(file.file_id);
   }
 
@@ -175,111 +163,9 @@ class File {
     }
   }
 
-  private removeUntitledFile(id: string): void {
-    this.removeFile(id);
-    this.closeDialogModal("directory__select");
-  }
-
-  public renderDialogModalForUntitledFile(selectedFile: IFile): void {
-    const allFolders = Object.values(Store.getState.folders);
-    renderComponent(
-      DirectorySelectContainer(),
-      "directory__select-container",
-      () => {
-        selectDomElements(".directory__select .cancel")?.forEach(
-          (i) => (i.onclick = () => this.closeDialogModal("directory__select"))
-        );
-        (selectDomElement("#confirm") as HTMLButtonElement).onclick = () =>
-          this.saveUntitledFile(selectedFile);
-        (selectDomElement("#do_not_save") as HTMLButtonElement).onclick = () =>
-          this.removeUntitledFile(selectedFile.file_id);
-        allFolders.forEach((i) => {
-          renderComponent(
-            DirectorySelect({
-              name: i.name,
-              dir: i.path,
-              id: i.id,
-            }),
-            "directory__select-wrapper"
-            // () => this.addEventListenerToFiles()
-          );
-        });
-      }
-    );
-  }
-
-  //run function when confirm button is clicked on modal
-  private saveUntitledFile(untitledFile: IFile): void {
-    const selectedFolders = Array.from(
-      document.querySelectorAll(
-        "input[type=checkbox][name=directory__select]:checked"
-      ),
-      (e) => (e as HTMLInputElement).value
-    );
-    const fileName = selectDomElement(
-      "input[type=text][name=file__name]"
-    ) as HTMLInputElement;
-    const { folders } = Store.getState;
-    if (!selectedFolders.length) {
-      swal({
-        title: "Wait!",
-        text: "You need to select at least one directory!",
-        icon: "error",
-      });
-      return;
-    }
-
-    if (fileName.value.split(".").length < 2) {
-      swal("File extension name is required. E.g index.js");
-      return;
-    }
-
-    selectedFolders.forEach(async (i) => {
-      const containerFolder = document.getElementById(folders[i].id);
-      const body = {
-        output_dir: folders[i].path,
-        file_name: sanitizeString(fileName.value.split(".")[0]),
-        file_ext: `.${sanitizeString(fileName.value.split(".").pop() || "")}`,
-        content: this.getDoc(untitledFile.file_id),
-      };
-      const newFileId = uid();
-      await req.createFile({ ...body });
-      Store.commit("setFiles", {
-        id: newFileId,
-        file: {
-          file_id: newFileId,
-          file_dir: body.output_dir,
-          file_type: body.file_ext,
-          file_name: body.file_name,
-          file_content: body.content,
-        },
-      });
-      renderComponent(
-        FileBlock({
-          name: body.file_name,
-          id: newFileId,
-          file_id: newFileId,
-          ext: body.file_ext,
-          show: !!containerFolder?.classList.contains("d-none"),
-        }),
-        folders[i].id,
-        () => this.initListeners(newFileId)
-      );
-    });
-    this.removeFile(untitledFile.file_id);
-    this.closeDialogModal("directory__select");
-  }
-  //run function when the x button is clicked on file view
   private removeFileFromOnView(id: string) {
     const currFileView = LS.getSelectedFile();
     const selectedFile = LS.getFilesOnView().find((i) => i.file_id === id);
-    const isUntitledFile =
-      selectedFile?.file_type === "" &&
-      selectedFile?.file_name.match(/\bUntitled\b/) !== null;
-    if (isUntitledFile) {
-      this.renderDialogModalForUntitledFile(selectedFile);
-      return;
-    }
     if (selectedFile?.modified) {
       if (!selectedFile) return;
       this.viewFile(selectedFile); //display the file to be removed on order for CM to read it's content
@@ -294,15 +180,15 @@ class File {
             "#dialog__ignore__save"
           ) as HTMLButtonElement;
           selectDomElements(".close__dialog")?.forEach(
-            (i) => (i.onclick = () => this.closeDialogModal("dialog__modal"))
+            (i) => (i.onclick = this.closeDialogModal)
           );
           save.onclick = () => {
             this.saveFileChanges(selectedFile);
-            this.closeDialogModal("dialog__modal");
+            this.closeDialogModal();
             this.removeFile(id);
           };
           ignore.onclick = () => {
-            this.closeDialogModal("dialog__modal");
+            this.closeDialogModal();
             this.removeFile(id);
           };
         }
@@ -313,22 +199,8 @@ class File {
     this.removeFile(id);
   }
 
-  private closeDialogModal(id: string): void {
-    selectDomElement(`#${id}`)?.remove();
-  }
-
-  private getDoc(id: string): string {
-    let doc = "";
-    CM.getCM[id].getDoc().children.map((i: any) => {
-      i.lines
-        .map((l: any) => l.text)
-        .forEach((x: any) => {
-          doc += x;
-          doc += "\n";
-        });
-      return doc;
-    });
-    return doc;
+  private closeDialogModal(): void {
+    selectDomElement("#dialog__modal")?.remove();
   }
 
   public async saveFileChanges(file: IFile): Promise<void> {
@@ -337,17 +209,16 @@ class File {
         (i) => i.file_dir === file.file_dir
       ); //use this to get the correct file based on the file path as the file changes on page reload
       if (!CM.getCM) return;
-      let doc = this.getDoc(file.file_id);
-      // let doc = "";
-      // CM.getCM[file.file_id].getDoc().children.map((i: any) => {
-      //   i.lines
-      //     .map((l: any) => l.text)
-      //     .forEach((x: any) => {
-      //       doc += x;
-      //       doc += "\n";
-      //     });
-      //   return doc;
-      // });
+      let doc = "";
+      CM.getCM[file.file_id].getDoc().children.map((i: any) => {
+        i.lines
+          .map((l: any) => l.text)
+          .forEach((x: any) => {
+            doc += x;
+            doc += "\n";
+          });
+        return doc;
+      });
       await req.writeFile({
         file_dir: file.file_dir,
         file_content: doc,
@@ -357,6 +228,7 @@ class File {
         file_content: doc,
       });
       const updatedFile = { ...file, file_content: doc };
+      console.log({ ...file, file_content: doc });
       LS.setSelectedFile(updatedFile);
       CM.updateFileOnType(false, updatedFile);
     } catch (error) {
@@ -364,30 +236,38 @@ class File {
       alert("OOps an error occurred");
     }
   }
-  public addFilesToDirectory(
-    file: IFile,
-    folderId: string,
-    show: boolean
-  ): void {
-    file.file_id = uid();
-    file.modified = false;
-    renderComponent(
-      FileBlock({
-        name: file.file_name,
-        id: file.file_id,
-        file_id: file.file_id,
-        ext: file.file_type,
-        show,
-      }),
-      folderId
+
+  public addEventListenerToFiles() {
+    const allFiles = <HTMLElement[]>(
+      Array.from(document.querySelectorAll(".explorer__content-file"))
     );
-    this.addEventListenerToFiles();
-    Store.commit("setFiles", { id: file.file_id, file: file });
+
+    allFiles.forEach((i) => {
+      i.onmousedown = this.handleFileClick;
+
+      i.ondragstart = DND.drag;
+      i.ondragover = DND.dragOver;
+      i.ondrop = DND.dragDrop;
+      i.ondragleave = DND.dragLeave;
+      i.ondragend = DND.dragEnd;
+    });
   }
 
   public checkForFilesInDirectories(folder: IFolder) {
     folder.files?.forEach(async (i) => {
-      this.addFilesToDirectory(i, folder.id, true);
+      i.file_id = uid();
+      i.modified = false;
+      renderComponent(
+        FileBlock({
+          name: i.file_name,
+          id: i.file_id,
+          file_id: i.file_id,
+          ext: i.file_type,
+        }),
+        folder.id
+      );
+      this.addEventListenerToFiles();
+      Store.commit("setFiles", { id: i.file_id, file: i });
     });
   }
 
@@ -408,6 +288,7 @@ class File {
     const file = new File();
     const filesOnView = Store.getState.filesOnView;
     const currFile = Store.getState.selectedFile || filesOnView[0];
+    console.log(currFile?.file_content);
     if (filesOnView.length) {
       filesOnView.forEach((i) => {
         const fileEditorContainer = document.getElementById(
@@ -415,87 +296,18 @@ class File {
         ) as HTMLElement;
         const editorHTML = `<div data-editor_cm_id=${i.file_id} id="cm-${i.file_id}" class="tab-pane d-none"></div>`;
         fileEditorContainer.innerHTML += editorHTML;
+        // console.log(fileEditorContainer);
         file.addFileToFileOnView("", i);
+        // console.log(i);
+        // file.viewFile(Store.getState.selectedFile || filesOnView[0]);
         file.addFileToOpenEditors("", i);
+        // CM.injectFileContent(i.file_id, i);
       });
       CM.injectFileContent(filesOnView);
     }
+    // console.log(CM.getCM[currFile.file_id].getWrapperElement());
+    // console.log(CM.getCM[currFile.file_id].getDoc().children);
     if (currFile) this.showEditor(currFile.file_id);
-  }
-
-  private newUntitledFile(): void {
-    const untitledFiles = LS.getFilesOnView().filter(
-      (i) => i.file_name.includes("Untitled") && i.file_type === ""
-    );
-    const untitledFile: IFile = {
-      file_name: `Untitled- ${untitledFiles.length + 1}`,
-      file_id: uid(),
-      file_dir: state.rootDirPath,
-      file_content: "",
-      file_type: "",
-    };
-    CM.injectCM(untitledFile);
-    this.addFileToFileOnView("", untitledFile);
-    this.addFileToOpenEditors("", untitledFile);
-    LS.setFilesOnView([...LS.getFilesOnView(), untitledFile]);
-    this.viewFile(untitledFile);
-  }
-
-  private saveAll(): void {
-    const unsavedFiles = LS.getFilesOnView().filter(
-      (i) => i?.modified === true
-    );
-    if (unsavedFiles.length)
-      unsavedFiles.forEach(async (i) => {
-        await this.saveFileChanges(i);
-      });
-  }
-
-  private closeAllEditor(): void {
-    LS.setFilesOnView([]);
-    LS.setSelectedFile(null);
-    Store.commit("setFilesOnViewFromLocalStorage");
-    ["explorer__view-header-group", "file__content"].forEach((i) => {
-      const e = document.getElementById(i) as HTMLElement;
-      let first = e.firstElementChild;
-      while (first) {
-        first.remove();
-        first = e.firstElementChild;
-      }
-    });
-  }
-
-  public initListeners(id: string): void {
-    const el = selectDomElement(`[id='${id}']`) as HTMLElement;
-    if (!el) return;
-    el.onmousedown = (e: MouseEvent) => e.stopPropagation(); //prevent event propagation initially on mousedown
-    el.onclick = this.handleFileClick;
-
-    el.ondragstart = DND.drag;
-    el.ondragover = DND.dragOver;
-    el.ondrop = DND.dragDrop;
-    el.ondragleave = DND.dragLeave;
-    el.ondragend = DND.dragEnd;
-  }
-
-  public addEventListenerToFiles(): void {
-    const allFiles = <HTMLElement[]>(
-      Array.from(document.querySelectorAll(".explorer__content-file"))
-    );
-
-    allFiles.forEach((i) => {
-      this.initListeners(i.id);
-    });
-  }
-
-  public addGlobalListeners(): void {
-    const newUntitledFileBtn = selectDomElement("#new_untitled_file");
-    const saveAllBtn = selectDomElement("#save_all");
-    const closeAllBtn = selectDomElement("#close_all_editors");
-
-    newUntitledFileBtn?.addEventListener("click", () => this.newUntitledFile());
-    saveAllBtn?.addEventListener("click", () => this.saveAll());
-    closeAllBtn?.addEventListener("click", this.closeAllEditor);
   }
 }
 
@@ -553,10 +365,12 @@ class Folder {
 
         if (state.isFolderSelected) {
           let newDirPath = `${newFilePath}\\${fileName.trim()}`;
+          // console.log(state.currentIdTarget);
+
           const res = await req.createDirectory(newDirPath);
           let folderId = uid();
           let folderSplit = newDirPath.split("\\");
-          let folderName = sanitizeString(folderSplit[folderSplit.length - 1]);
+          let folderName = folderSplit[folderSplit.length - 1];
           let index = folderSplit.indexOf(state.rootDirName);
 
           if (index === -1)
@@ -607,7 +421,7 @@ class Folder {
             file: {
               file_content: "",
               file_id: fileId,
-              file_name: sanitizeString(fileName),
+              file_name: fileName,
               file_type: `.${extName}`,
               file_dir: newFilePath
                 ? `${state.rootDirName}\\${newFilePath}\\${fileName}.${extName}`
@@ -616,7 +430,7 @@ class Folder {
           });
           renderComponent(
             FileBlock({
-              name: `${fileName}.${extName}`,
+              name: fileName,
               id: fileId,
               file_id: fileId,
               ext: `.${extName}`,
@@ -632,20 +446,6 @@ class Folder {
       if (e.key === "Escape" || e.code === "Escape")
         unmountComponent("explorer__content-input");
     } catch (error) {
-      let err = error as AxiosError;
-      if (error instanceof Error && err.response) {
-        if (
-          err.response.status === 500 &&
-          (err.response.data as any).message === "File already exist"
-        ) {
-          textFieldContainer.insertAdjacentHTML(
-            "beforeend",
-            TextFieldErrorMessage({
-              message: "File already exist",
-            })
-          );
-        }
-      }
       console.log(error);
     }
   }
@@ -816,6 +616,123 @@ class Folder {
     }
   };
 
+  private addEventListenerToContextDropdown(): void {
+    let deleteBtn = selectDomElement("#delete");
+    let renameBtn = selectDomElement("#rename");
+    let addFolderBtn = selectDomElement("#add__folder-context");
+    let addFileBtn = selectDomElement("#add__file-context");
+
+    deleteBtn?.addEventListener("mousedown", this.deleteFileOrFolder);
+    renameBtn?.addEventListener("mousedown", this.renameFolder);
+
+    const addFolderOrFileContextEvent = (type: "file" | "folder") => {
+      const selectedFolder = selectDomElement(
+        `[id='${state.currentIdTarget}']`
+      ) as HTMLElement;
+      if (
+        !selectedFolder?.classList.contains(
+          "explorer__content-folder--collapsed"
+        )
+      )
+        this.expandFolder(selectedFolder, state.currentIdTarget || "");
+      this.addFileOrFolder(type);
+      unmountComponent("dropdown__context");
+    };
+
+    addFolderBtn?.addEventListener("mousedown", (e: MouseEvent) => {
+      e.stopPropagation();
+      addFolderOrFileContextEvent("folder");
+    });
+    addFileBtn?.addEventListener("mousedown", (e: MouseEvent) => {
+      e.stopPropagation();
+      addFolderOrFileContextEvent("file");
+    });
+  }
+
+  public addEventListenersToFolders() {
+    const folders = <HTMLElement[]>(
+      Array.from(document.querySelectorAll(".explorer__content-folder"))
+    );
+    folders.forEach((i) => {
+      i.addEventListener("mousedown", this.onFolderClick);
+      // i.addEventListener("mouseenter", () => this.handleFolderHover()); //call from an arrow function to prevent binding issues with "this"
+
+      i.addEventListener("dragstart", DND.drag);
+      i.addEventListener("dragover", DND.dragOver);
+      i.addEventListener("drop", DND.dragDrop);
+      i.addEventListener("dragleave", DND.dragLeave);
+      i.addEventListener("dragend", DND.dragEnd);
+    });
+  }
+
+  public addGlobalEventListener() {
+    const searchService = new SearchService();
+    const addFileBtn = selectDomElement("#add__file");
+    const addFolderBtn = selectDomElement("#add__folder");
+    const explorerBtn = selectDomElement("#explorer__icon-file");
+    const searchBtn = selectDomElement("#explorer__icon-search");
+    let trashZone = selectDomElement("#trash__zone");
+    const collapseFoldersBtn = selectDomElement("#collapse__folders");
+    const refreshFolderBtn = selectDomElement("#refresh__folders");
+    const explorerContainer = selectDomElement(".explorer__content");
+    const searchContainer = selectDomElement("#search__container");
+
+    trashZone?.addEventListener("dragover", DND.trashZoneDragOver);
+    trashZone?.addEventListener("drop", DND.dropInTrash);
+    trashZone?.addEventListener("dragleave", () =>
+      trashZone?.classList.remove("delete__zone--over--dashed")
+    );
+
+    // explorerContainer.addEventListener("mousedown", (e: Event) => {
+    //   const target = e.target as Element;
+    //   if (target.classList.contains("explorer__content"))
+    //     this.currentTarget = "folder-container";
+    // });
+    addFileBtn?.addEventListener("click", () => this.addFileOrFolder("file"));
+    addFolderBtn?.addEventListener("click", () =>
+      this.addFileOrFolder("folder")
+    );
+    refreshFolderBtn?.addEventListener("click", this.refreshFolders);
+    collapseFoldersBtn?.addEventListener("click", () => {
+      let el = Array.from(
+        document.querySelectorAll(".explorer__content-folder--collapsed")
+      );
+      let arrowIcons = Array.from(
+        document.querySelectorAll(".explorer__content-folder--collapsed i")
+      );
+      el.forEach((i) =>
+        i.classList.remove("explorer__content-folder--collapsed")
+      );
+      arrowIcons.forEach((i) => i.classList.remove("fa-rotate-90"));
+      this.collapseAllFolders();
+    });
+    explorerBtn?.addEventListener("click", (e: MouseEvent) => {
+      const currentTarget = e.currentTarget as HTMLElement;
+      searchContainer?.classList.add("d-none");
+      explorerContainer?.classList.remove("d-none");
+      if (currentTarget?.classList.contains("active")) {
+        explorerContainer?.classList.add("d-none");
+        currentTarget.classList.remove("active");
+      } else {
+        currentTarget?.classList.add("active"); //add active class and show content
+        searchBtn?.classList.remove("active"); //remove active class from search
+      }
+    });
+    searchBtn?.addEventListener("click", (e: MouseEvent) => {
+      const currentTarget = e.currentTarget as HTMLElement;
+      explorerContainer?.classList.add("d-none"); //add display none to explorer
+      searchContainer?.classList.remove("d-none");
+      if (currentTarget?.classList.contains("active")) {
+        searchContainer?.classList.add("d-none");
+        currentTarget.classList.remove("active");
+      } else {
+        currentTarget?.classList.add("active"); //add active class and show content
+        explorerBtn?.classList.remove("active");
+      }
+    });
+    searchService.addListeners();
+  }
+
   /**
    * derive the path from current iteration path based on the index of the rootPathName in the splitted array
    * e.g:
@@ -869,8 +786,6 @@ class Folder {
       let {
         data: { directories, root_dir },
       } = await req.getDirectories();
-      // const rootDirFiles = await req.getFileInDirectory(root_dir);
-      // console.log(rootDirFiles);
       state.rootDirPath = root_dir;
       state.rootDirName = root_dir.split("\\").slice(-1)[0]; //.pop();
 
@@ -890,145 +805,10 @@ class Folder {
         });
       });
       await wait;
-      const rootDirFiles = await req.getFileInDirectory("/");
-      const file = new File();
-      rootDirFiles.data.files.forEach((i) => {
-        file.addFilesToDirectory(i, "folder-container", false);
-      });
       this.addEventListenersToFolders();
     } catch (error) {
       console.log(error);
-      swal({
-        title: "Oops an error occurred",
-      });
     }
-  }
-
-  private addEventListenerToContextDropdown(): void {
-    let deleteBtn = selectDomElement("#delete");
-    let renameBtn = selectDomElement("#rename");
-    let addFolderBtn = selectDomElement("#add__folder-context");
-    let addFileBtn = selectDomElement("#add__file-context");
-
-    deleteBtn?.addEventListener("mousedown", this.deleteFileOrFolder);
-    renameBtn?.addEventListener("mousedown", this.renameFolder);
-
-    const addFolderOrFileContextEvent = (type: "file" | "folder") => {
-      const selectedFolder = selectDomElement(
-        `[id='${state.currentIdTarget}']`
-      ) as HTMLElement;
-      if (
-        !selectedFolder?.classList.contains(
-          "explorer__content-folder--collapsed"
-        )
-      )
-        this.expandFolder(selectedFolder, state.currentIdTarget || "");
-      this.addFileOrFolder(type);
-      unmountComponent("dropdown__context");
-    };
-
-    addFolderBtn?.addEventListener("mousedown", (e: MouseEvent) => {
-      e.stopPropagation();
-      addFolderOrFileContextEvent("folder");
-    });
-    addFileBtn?.addEventListener("mousedown", (e: MouseEvent) => {
-      e.stopPropagation();
-      addFolderOrFileContextEvent("file");
-    });
-  }
-
-  public addEventListenersToFolders() {
-    const folders = <HTMLElement[]>(
-      Array.from(document.querySelectorAll(".explorer__content-folder"))
-    );
-    folders.forEach((i) => {
-      i.addEventListener("mousedown", this.onFolderClick);
-      // i.addEventListener("mouseenter", () => this.handleFolderHover()); //call from an arrow function to prevent binding issues with "this"
-
-      i.addEventListener("dragstart", DND.drag);
-      i.addEventListener("dragover", DND.dragOver);
-      i.addEventListener("drop", DND.dragDrop);
-      i.addEventListener("dragleave", DND.dragLeave);
-      i.addEventListener("dragend", DND.dragEnd);
-    });
-  }
-
-  public addGlobalEventListener() {
-    const searchService = new SearchService();
-    const file = new File();
-    const addFileBtn = selectDomElement("#add__file");
-    const addFolderBtn = selectDomElement("#add__folder");
-    const explorerBtn = selectDomElement("#explorer__icon-file");
-    const searchBtn = selectDomElement("#explorer__icon-search");
-    let trashZone = selectDomElement("#trash__zone");
-    const collapseFoldersBtn = selectDomElement("#collapse__folders");
-    const refreshFolderBtn = selectDomElement("#refresh__folders");
-    const explorerContainer = selectDomElement(".explorer__content");
-    const searchContainer = selectDomElement("#search__container");
-    const editorContainer = selectDomElement("#file__content");
-
-    trashZone?.addEventListener("dragover", DND.trashZoneDragOver);
-    trashZone?.addEventListener("drop", DND.dropInTrash);
-    trashZone?.addEventListener("dragleave", () =>
-      trashZone?.classList.remove("delete__zone--over--dashed")
-    );
-    //editor
-    editorContainer?.addEventListener("dragover", DND.editorHover);
-    editorContainer?.addEventListener("dragleave", DND.editorHoverLeave);
-    editorContainer?.addEventListener("drop", (e: DragEvent) =>
-      DND.onEditorFileDrop(e, file.handleFileClickOnLeftClick)
-    );
-    // editorContainer?.addEventListener("click", () => alert("cj"));
-
-    // explorerContainer.addEventListener("mousedown", (e: Event) => {
-    //   const target = e.target as Element;
-    //   if (target.classList.contains("explorer__content"))
-    //     this.currentTarget = "folder-container";
-    // });
-    addFileBtn?.addEventListener("click", () => this.addFileOrFolder("file"));
-    addFolderBtn?.addEventListener("click", () =>
-      this.addFileOrFolder("folder")
-    );
-    refreshFolderBtn?.addEventListener("click", this.refreshFolders);
-    collapseFoldersBtn?.addEventListener("click", () => {
-      let el = Array.from(
-        document.querySelectorAll(".explorer__content-folder--collapsed")
-      );
-      let arrowIcons = Array.from(
-        document.querySelectorAll(".explorer__content-folder--collapsed i")
-      );
-      el.forEach((i) =>
-        i.classList.remove("explorer__content-folder--collapsed")
-      );
-      arrowIcons.forEach((i) => i.classList.remove("fa-rotate-90"));
-      this.collapseAllFolders();
-    });
-    explorerBtn?.addEventListener("click", (e: MouseEvent) => {
-      const currentTarget = e.currentTarget as HTMLElement;
-      searchContainer?.classList.add("d-none");
-      explorerContainer?.classList.remove("d-none");
-      if (currentTarget?.classList.contains("active")) {
-        explorerContainer?.classList.add("d-none");
-        currentTarget.classList.remove("active");
-      } else {
-        currentTarget?.classList.add("active"); //add active class and show content
-        searchBtn?.classList.remove("active"); //remove active class from search
-      }
-    });
-    searchBtn?.addEventListener("click", (e: MouseEvent) => {
-      const currentTarget = e.currentTarget as HTMLElement;
-      explorerContainer?.classList.add("d-none"); //add display none to explorer
-      searchContainer?.classList.remove("d-none");
-      if (currentTarget?.classList.contains("active")) {
-        searchContainer?.classList.add("d-none");
-        currentTarget.classList.remove("active");
-      } else {
-        currentTarget?.classList.add("active"); //add active class and show content
-        explorerBtn?.classList.remove("active");
-      }
-    });
-    searchService.addListeners();
-    file.addGlobalListeners();
   }
 
   protected handleFolderHover(): void {
@@ -1153,18 +933,11 @@ class SearchService extends File {
         .filter((i) => i !== undefined) as IFile[] | [];
       this.matchedFiles = matchedFiles;
     } else {
-      // const indexes = caseSensitive.filter((i) => i !== -1 && i !== undefined);
-      // const matchedFiles = indexes.map((index) => {
-      //   const foundIndex = caseSensitive.findIndex((i) => i === index);
-      //   return includedFiles[foundIndex];
-      // });
-      const matchedFiles = caseSensitive
-        .map((i, index) => {
-          let matched: IFile[] = [];
-          if (i !== -1 && i !== undefined) matched.push(includedFiles[index]);
-          return matched[0];
-        })
-        .filter((i) => i);
+      const indexes = caseSensitive.filter((i) => i !== -1 && i !== undefined);
+      const matchedFiles = indexes.map((index) => {
+        const foundIndex = caseSensitive.findIndex((i) => i === index);
+        return includedFiles[foundIndex];
+      });
       this.matchedFiles = matchedFiles;
     }
     if (this.useRegex) {
@@ -1182,7 +955,6 @@ class SearchService extends File {
     const message: string = this.matchedFiles.length ? "" : this.noResultMsg;
     const matchedLines: { file: IFile; lines: string[] }[] = [];
     this.messageContainer.textContent = message;
-    // console.log(this.matchedFiles);
     this.matchedFiles.forEach((i, index, array) => {
       const lines = i.file_content.split("\n");
       let t: string[] = [];
@@ -1417,18 +1189,28 @@ class SearchService extends File {
 CodeMirror.commands.save = () => {
   const file = new File();
   const f = LS.getSelectedFile();
-  const isUntitledFile =
-    f?.file_type === "" && f?.file_name.match(/\bUntitled\b/) !== null;
-  if (isUntitledFile) {
-    file.renderDialogModalForUntitledFile(f);
-    return;
-  }
+  // console.log("saved", LS.getSelectedFile());
   file.saveFileChanges(f);
   CM.updateFileOnType(false, f);
-  swal({
-    title: "File saved",
-    timer: 1500,
-  });
 };
 
+// Store.subscribeEvents(
+//   (_, changes) => {
+//     const keys = Object.keys(changes);
+//     // if (keys.includes("filesOnView")) console.log(keys, "changes");
+//     console.log(Store.getState.filesOnView, "state");
+//     console.log(changes, "state");
+//   },
+//   ["filesOnView"]
+// );
+// CM.CMInstance.on(
+//   "change",
+//   function (instance: typeof CodeMirror, event: Event) {
+//     // instance.codemirrorIgnore = true;
+//     // event.preventDefault();
+//     console.log("instance", instance);
+//     console.log("changeObj", event);
+//     console.log("changeObj", Store.getState.selectedFile);
+//   }
+// );
 export { File, Folder };

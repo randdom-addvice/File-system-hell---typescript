@@ -1,0 +1,183 @@
+components:
+  schemas:
+    File:
+      type: object
+      properties:
+        file_dir:
+          type: string
+          description: directory where the file resides.
+          example: C:\\Users\\HP\\Documents\\NODEJS PROJECTS\\File system\\myFiles\\allDocs
+        file_name:
+          type: string
+          description: Name of the file.
+          example: example.json
+        file_ext:
+          type: string
+          description: File extension name.
+          example: .json
+        file_content:
+          type: string
+          description: Content of the file.
+          example: <h1>Hello world in a html file</h1>
+
+paths:
+  /files:
+    get:
+      tags:
+        - Files
+      summary: Shallowly retrieve all files in a directory.
+      parameters:
+        - in: query
+          name: directory
+          schema:
+            type: string
+            default: allDocs
+            required: true
+      responses:
+        200:
+          description: all files.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/File"
+        400:
+          description: Bad request.
+  /files/get-file:
+    get:
+      tags:
+        - Files
+      summary: Retrieve a single file with it's content.
+      parameters:
+        - in: query
+          name: directory
+          schema:
+            type: string
+            default: "C:\\Users\\HP\\Documents\\NODEJS PROJECTS\\File system\\myFiles\\allDocs/sample.json"
+            required: true
+      responses:
+        200:
+          description: all files.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/File"
+        400:
+          description: Bad request.
+  /files/create:
+    post:
+      tags:
+        - Files
+      summary: Create a new file
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                output_dir:
+                  type: string
+                  default: "C:\\Users\\HP\\Documents\\NODEJS PROJECTS\\File system\\myFiles\\newlyCreatedDocs"
+                  required: true
+                file_name:
+                  type: string
+                  default: "myNewFile"
+                  required: true
+                file_ext:
+                  type: string
+                  default: ".html"
+                  required: true
+                content:
+                  type: string
+                  default: "<h1>This is a div tag lol</h1>"
+                  required: true
+      responses:
+        200:
+          description: file created.
+        500:
+          description: internal server error.
+        404:
+          description: error in creating file.
+  /files/move:
+    post:
+      tags:
+        - Files
+      summary: Move a file from one directory to another.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                old_dir:
+                  type: string
+                  default: "C:\\Users\\HP\\Documents\\NODEJS PROJECTS\\File system\\myFiles\\text.txt"
+                  required: true
+                new_dir:
+                  type: string
+                  default: "C:\\Users\\HP\\Documents\\NODEJS PROJECTS\\File system\\myFiles\\acceptedDocs\\text.txt"
+                  required: true
+      responses:
+        200:
+          description: file moved.
+        500:
+          description: internal server error.
+        404:
+          description: error moving file.
+  /files/rename:
+    patch:
+      tags:
+        - Files
+      summary: Rename a file in a directory.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                old_file_path:
+                  type: string
+                  default: "C:\\Users\\HP\\Documents\\NODEJS PROJECTS\\File system\\myFiles\\allDocs\\sample.json"
+                  required: true
+                new_file_name:
+                  type: string
+                  default: "newFileName.json"
+                  required: true
+      responses:
+        204:
+          description: file moved.
+        500:
+          description: internal server error.
+        404:
+          description: error moving file.
+  /files/delete:
+    delete:
+      tags:
+        - Files
+      summary: Delete a file in a directory.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                file_dir:
+                  type: string
+                  default: "C:\\Users\\HP\\Documents\\NODEJS PROJECTS\\File system\\myFiles\\text.txt"
+                  required: true
+      responses:
+        200:
+          description: all files.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/File"
+        400:
+          description: Bad request.
